@@ -38,8 +38,8 @@ function MascotRow({ children, big }: { children: React.ReactNode; big?: boolean
 const fade = { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0, y: -24 } };
 
 export function Onboarding({ onDone }: { onDone: (p: Profile) => void }) {
-  const [step, setStep] = useState<Step>("account");
-  const [hasAccount, setHasAccount] = useState(false);
+  const [step, setStep] = useState<Step>("niche");
+  const [hasAccount, setHasAccount] = useState(true);
   const [niche, setNiche] = useState<Niche>();
   const [intent, setIntent] = useState<"buy" | "sell">();
   const [custom, setCustom] = useState("");
@@ -49,8 +49,8 @@ export function Onboarding({ onDone }: { onDone: (p: Profile) => void }) {
   const [leaving, setLeaving] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const steps: Step[] = ["account", "niche", "intent", "detail"];
-  const stepIdx = Math.min(steps.indexOf(step === "ready" ? "detail" : step), 3);
+  const steps: Step[] = ["niche", "intent", "detail"];
+  const stepIdx = Math.min(steps.indexOf(step === "ready" ? "detail" : step), 2);
   const bloom: Bloom = intent === "sell" ? "leaves" : intent === "buy" ? "fruits" : "none";
 
   const finish = (override?: string) => {
