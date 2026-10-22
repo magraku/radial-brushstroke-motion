@@ -146,10 +146,92 @@ export const alerts = [
 ];
 
 export const agentReplies = {
-  bestSeller: "Vos sneakers tournent le plus vite : 3 ventes ce mois, +12 %. Ouvrez la boîte pour voir le détail.",
-  deals: "2 bonnes affaires et 1 arnaque probable détectées aujourd'hui. Je vous les affiche.",
+  bestSeller: "Tes sneakers tournent le plus vite : 3 ventes ce mois, +12 %. Touche une fiche pour voir le détail.",
+  deals: "2 bonnes affaires et 1 arnaque probable détectées aujourd'hui. Je te les affiche.",
   analysis: "Forte demande. Je recommande 45–50 €, eBay vend le plus vite.",
-  added: "C'est rangé ! Votre paire est dans la boîte Sneakers.",
-  askPhoto: "Envoyez-moi une photo et l'état de l'objet, je m'occupe du reste.",
-  fallback: "Compris. Voici votre inventaire mis à jour.",
+  added: "C'est rangé ! Ta paire est dans ton inventaire, famille Sneakers.",
+  askPhoto: "Envoie-moi une photo et l'état de l'objet, je m'occupe du reste.",
+  fallback: "Compris. Voici ton inventaire mis à jour.",
 };
+
+// Onboarding niches — each carries a small market study shown by the mascot.
+export type NicheStudy = {
+  demandScore: number;
+  searches: number;
+  sales: number;
+  sellThroughDays: number;
+  median: number;
+  trend: number;
+  bestPlatform: string;
+  note: string;
+};
+
+export type Niche = { id: string; name: string; emoji: string; study: NicheStudy };
+
+export const niches: Niche[] = [
+  {
+    id: "pokemon",
+    name: "Cartes Pokémon",
+    emoji: "🃏",
+    study: {
+      demandScore: 88,
+      searches: 12400,
+      sales: 860,
+      sellThroughDays: 4,
+      median: 35,
+      trend: 14,
+      bestPlatform: "cardmarket",
+      note: "Les holos et les displays scellés partent en quelques jours, surtout sur Cardmarket.",
+    },
+  },
+  {
+    id: "gpu",
+    name: "GPU & CPU",
+    emoji: "🖥️",
+    study: {
+      demandScore: 74,
+      searches: 6300,
+      sales: 410,
+      sellThroughDays: 9,
+      median: 220,
+      trend: 6,
+      bestPlatform: "ebay",
+      note: "Le prix suit les nouvelles générations : bien daté, un GPU d'occasion se vend vite.",
+    },
+  },
+  {
+    id: "sneakers",
+    name: "Sneakers",
+    emoji: "👟",
+    study: {
+      demandScore: 82,
+      searches: 9800,
+      sales: 640,
+      sellThroughDays: 6,
+      median: 120,
+      trend: 9,
+      bestPlatform: "vinted",
+      note: "Les paires en bon état avec boîte d'origine se vendent ~15 % plus cher.",
+    },
+  },
+];
+
+// Deterministic study for a custom niche typed by the user.
+export function customNiche(name: string): Niche {
+  const r = rng(hash(name.toLowerCase()) + 11);
+  return {
+    id: "custom",
+    name,
+    emoji: "✨",
+    study: {
+      demandScore: Math.round(55 + r() * 35),
+      searches: Math.round(800 + r() * 6000),
+      sales: Math.round(60 + r() * 500),
+      sellThroughDays: Math.round(3 + r() * 12),
+      median: Math.round(20 + r() * 180),
+      trend: Math.round(r() * 16),
+      bestPlatform: ["vinted", "ebay", "leboncoin"][Math.floor(r() * 3)]!,
+      note: "Je suivrai ce marché pour toi et je t'alerterai dès qu'une occasion se présente.",
+    },
+  };
+}
