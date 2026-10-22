@@ -97,7 +97,7 @@ function Index() {
       <div className="relative z-20">
         <ChatDock messages={messages} typing={typing} onSend={onSend} />
       </div>
-      <div className="pointer-events-none fixed right-4 top-16 z-40 w-[min(22rem,calc(100vw-2rem))]">
+      <div className="pointer-events-none fixed bottom-36 right-4 z-40 w-[min(22rem,calc(100vw-2rem))]">
         <AnimatePresence>
           {toast && (
             <motion.div key={toast.id} initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 40 }} className="pointer-events-auto rounded-2xl bg-card shadow-xl">
