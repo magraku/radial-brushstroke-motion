@@ -11,7 +11,7 @@ function Row({ p, action }: { p: Product; action?: React.ReactNode }) {
   const m = marketplaces[p.market];
   return (
     <div className="surface flex items-center gap-3 rounded-2xl p-3">
-      <ProductThumb src={p.image} alt={p.name} className="size-12 shrink-0 rounded-xl" />
+      {p.image ? <ProductThumb src={p.image} alt={p.name} className="size-12 shrink-0 rounded-xl" /> : <div className="grid size-12 shrink-0 place-items-center rounded-xl bg-secondary text-primary"><Package className="size-5" /></div>}
       <div className="min-w-0 flex-1">
         <div className="truncate text-sm font-semibold">{p.name}</div>
         <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px]">

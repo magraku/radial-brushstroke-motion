@@ -33,7 +33,7 @@ const TREE_BY_VIEW: Record<View, TreeStage> = {
   home: "full",
   inventory: "full",
   analysis: "fruit",
-  profile: "roots",
+  profile: "full",
 };
 
 function Index() {
