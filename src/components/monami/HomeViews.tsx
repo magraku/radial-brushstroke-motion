@@ -111,7 +111,7 @@ export function BuyHome({ niche, item }: { niche: Niche; item: string }) {
       </div>
       <div className="relative mx-auto mt-2 min-h-[420px] w-full flex-1">
         <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 size-full">
-          <motion.path d="M50 100 L50 78" stroke="var(--card)" strokeLinecap="round" fill="none" vectorEffect="non-scaling-stroke" style={{ strokeWidth: 10 }} initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.6, delay: 0.4 }} />
+          <motion.path d="M50 100 L50 78" stroke="var(--card)" strokeLinecap="round" fill="none" strokeWidth={1.6} initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.6, delay: 0.4 }} />
           {SLOTS.map((s, i) => (
             <motion.path
               key={i}
@@ -119,8 +119,8 @@ export function BuyHome({ niche, item }: { niche: Niche; item: string }) {
               stroke="var(--card)"
               fill="none"
               strokeLinecap="round"
-              vectorEffect="non-scaling-stroke"
-              style={{ strokeWidth: 5 }}
+             
+              strokeWidth={0.7}
               initial={{ pathLength: 0 }}
               animate={{ pathLength: 1 }}
               transition={{ duration: 1, delay: 0.7 + i * 0.18, ease: "easeOut" }}
