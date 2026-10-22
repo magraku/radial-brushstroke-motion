@@ -11,7 +11,9 @@ import { ProfileView } from "@/components/monami/ProfileView";
 import { TreeBackground, type TreeStage } from "@/components/monami/tree3d/TreeBackground";
 import { agentReplies, alerts, analysis, niches, type Product, type Offer } from "@/data/mock";
 import { copy } from "@/lib/copy";
-import { DEMO_KEY, restoreDemo, chatRequest } from "@/lib/demo-profile";
+import { restoreDemo, chatRequest } from "@/lib/demo-profile";
+import { supabase } from "@/integrations/supabase/client";
+import { AuthScreen } from "@/components/monami/AuthScreen";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -51,20 +53,43 @@ function Index() {
   const [messages, setMessages] = useState<Msg[]>([]);
   const idRef = useRef(1);
 
+  const [userId, setUserId] = useState<string | null>();
+
   useEffect(() => {
-    let saved;
-    try { saved = restoreDemo(localStorage.getItem(DEMO_KEY)); } catch { /* storage is optional for this demo */ }
-    if (saved) {
-      setProfile(saved.profile); setItems(saved.items); setFavorites(saved.favorites); setSavedOffers(saved.savedOffers);
-      setMessages([{ id: 0, role: "agent", text: copy.chatWelcome }]); setReturning(true);
-      idRef.current = saved.items.reduce((max, p) => Math.max(max, Number(p.id.replace("item-", "")) || 0), 0) + 1;
-    }
-    setLoaded(true);
+    supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null));
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" || event === "SIGNED_OUT") setUserId(session?.user.id ?? null);
+    });
+    return () => sub.subscription.unsubscribe();
   }, []);
+
   useEffect(() => {
-    if (!loaded || !profile) return;
-    try { localStorage.setItem(DEMO_KEY, JSON.stringify({ profile, items, savedOffers, favorites })); } catch { /* browser quota / private browsing */ }
-  }, [loaded, profile, items, savedOffers, favorites]);
+    if (!userId) { setLoaded(false); setProfile(undefined); return; }
+    let cancelled = false;
+    supabase.from("profiles").select("data").eq("id", userId).maybeSingle().then(({ data }) => {
+      if (cancelled) return;
+      const saved = restoreDemo(data?.data ? JSON.stringify(data.data) : null);
+      if (saved) {
+        setProfile(saved.profile); setItems(saved.items); setFavorites(saved.favorites); setSavedOffers(saved.savedOffers);
+        setMessages([{ id: 0, role: "agent", text: copy.chatWelcome }]); setReturning(true); setView("profile");
+        idRef.current = saved.items.reduce((max, p) => Math.max(max, Number(p.id.replace("item-", "")) || 0), 0) + 1;
+      }
+      setLoaded(true);
+    });
+    return () => { cancelled = true; };
+  }, [userId]);
+  useEffect(() => {
+    if (!loaded || !profile || !userId) return;
+    const t = setTimeout(() => {
+      supabase.from("profiles").upsert({ id: userId, data: JSON.parse(JSON.stringify({ profile, items, savedOffers, favorites })), updated_at: new Date().toISOString() });
+    }, 600);
+    return () => clearTimeout(t);
+  }, [loaded, profile, items, savedOffers, favorites, userId]);
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    setItems([]); setFavorites([]); setSavedOffers([]); setMessages([]); setReturning(false); setView("home");
+  };
 
   useEffect(() => {
     if (!profile) return;
@@ -146,6 +171,7 @@ function Index() {
     reply(agentReplies.added);
   };
 
+  if (userId === null) return <AuthScreen />;
   if (!loaded) return <div className="relative h-dvh"><TreeBackground stage="full" /></div>;
   if (!profile) return <Onboarding onDone={onDone} />;
 
@@ -157,7 +183,7 @@ function Index() {
       transition={{ duration: 1.1, ease: [0.2, 0.8, 0.2, 1] }}
     >
       <TreeBackground stage={TREE_BY_VIEW[view]} bloom={profile.intent === "sell" ? "leaves" : "fruits"} />
-      <TopBar onProfile={() => setView("profile")} />
+      <TopBar onProfile={() => setView("profile")} onSignOut={signOut} />
       <main className="relative z-10 min-h-0 flex-1 overflow-y-auto px-4 pt-2 sm:px-6">
         <div className="mx-auto h-full max-w-6xl">
           <AnimatePresence mode="wait">

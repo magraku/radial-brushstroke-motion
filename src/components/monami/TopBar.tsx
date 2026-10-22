@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Bell, ShieldAlert, Sparkle } from "lucide-react";
+import { Bell, LogOut, ShieldAlert, Sparkle } from "lucide-react";
 import { alerts } from "@/data/mock";
 import { copy } from "@/lib/copy";
 import { MonamiLogo } from "./MonamiLogo";
@@ -31,7 +31,7 @@ export function AlertCard({ a, onClose }: { a: (typeof alerts)[number]; onClose?
   );
 }
 
-export function TopBar({ onProfile }: { onProfile?: () => void }) {
+export function TopBar({ onProfile, onSignOut }: { onProfile?: () => void; onSignOut?: () => void }) {
   const [open, setOpen] = useState(false);
   return (
     <header className="relative z-30 flex h-14 items-center gap-3 px-4 sm:px-6">
@@ -56,6 +56,11 @@ export function TopBar({ onProfile }: { onProfile?: () => void }) {
         <button onClick={onProfile} aria-label={copy.profile} className="grid size-9 place-items-center rounded-full bg-brand text-sm font-semibold text-primary-foreground transition hover:scale-105">
           AX
         </button>
+        {onSignOut && (
+          <button onClick={onSignOut} aria-label="Se déconnecter" title="Se déconnecter" className="grid size-9 place-items-center rounded-full hover:bg-muted">
+            <LogOut className="size-4.5" />
+          </button>
+        )}
       </div>
     </header>
   );
