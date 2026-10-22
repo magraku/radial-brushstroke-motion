@@ -72,7 +72,7 @@ function taperedTube(spec: BranchSpec): THREE.BufferGeometry {
   const tubular = 48;
   const radial = 10;
   const geo = new THREE.TubeGeometry(curve, tubular, 1, radial, false);
-  const pos = geo.attributes.position as THREE.BufferAttribute;
+  const pos = geo.attributes["position"] as THREE.BufferAttribute;
   // TubeGeometry has uniform radius — taper it by scaling each ring toward the curve spine.
   for (let i = 0; i <= tubular; i++) {
     const t = i / tubular;
@@ -96,7 +96,7 @@ export function TreeScene() {
     const leafGeos = LEAVES.map((l) => {
       const g = new THREE.IcosahedronGeometry(l.s, 1);
       // gently squash + jitter for an organic cloud feel
-      const pos = g.attributes.position as THREE.BufferAttribute;
+      const pos = g.attributes["position"] as THREE.BufferAttribute;
       const v = new THREE.Vector3();
       for (let i = 0; i < pos.count; i++) {
         v.set(pos.getX(i), pos.getY(i), pos.getZ(i));
