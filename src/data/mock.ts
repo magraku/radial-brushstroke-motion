@@ -235,3 +235,27 @@ export function customNiche(name: string): Niche {
     },
   };
 }
+
+// Platforms suggested for selling — eBay is always first for the demo.
+const NICHE_PLATFORMS: Record<string, string[]> = {
+  pokemon: ["cardmarket", "vinted"],
+  gpu: ["backmarket", "leboncoin"],
+  sneakers: ["stockx", "vinted"],
+  custom: ["vinted", "leboncoin"],
+};
+export function platformsFor(niche: Niche): { id: string; name: string; color: string; fit: number }[] {
+  const ids = ["ebay", ...(NICHE_PLATFORMS[niche.id] ?? NICHE_PLATFORMS["custom"]!)];
+  return ids.map((id, i) => ({ id, ...marketplaces[id]!, fit: [96, 84, 71][i] ?? 60 }));
+}
+
+export type Offer = { id: string; title: string; price: number; market: string; delta: number; kind: "deal" | "fair" | "scam" };
+export function offersFor(query: string, niche: Niche): Offer[] {
+  const r = rng(hash(query.toLowerCase() + niche.id) + 3);
+  const base = niche.study.median;
+  const markets = ["ebay", ...(NICHE_PLATFORMS[niche.id] ?? NICHE_PLATFORMS["custom"]!), "leboncoin"];
+  const kinds: Offer["kind"][] = ["deal", "fair", "deal", "scam", "fair"];
+  return kinds.map((kind, i) => {
+    const delta = kind === "deal" ? -Math.round(12 + r() * 15) : kind === "scam" ? -Math.round(55 + r() * 15) : Math.round(r() * 8 - 3);
+    return { id: `o${i}`, title: query, price: Math.max(1, Math.round(base * (1 + delta / 100))), market: markets[i % markets.length]!, delta, kind };
+  });
+}

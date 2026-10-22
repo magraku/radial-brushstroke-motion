@@ -76,7 +76,7 @@
  */
 :root {
   --radius: 1.25rem;
-  --background: oklch(0.955 0.025 95); /* Ivory Mist #F7F2E0 */
+  --background: oklch(0.74 0.085 255); /* Cool Horizon #80AEE8 — page sky; Ivory Mist is for cards/chat */
   --foreground: oklch(0.28 0.03 40);
   --card: oklch(0.985 0.015 95);
   --card-foreground: oklch(0.28 0.03 40);

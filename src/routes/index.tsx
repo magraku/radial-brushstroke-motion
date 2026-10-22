@@ -6,6 +6,7 @@ import { ProductGrid } from "@/components/monami/ProductGrid";
 import { AnalysisView } from "@/components/monami/AnalysisView";
 import { ChatDock, type Msg } from "@/components/monami/ChatDock";
 import { Onboarding, type Profile } from "@/components/monami/Onboarding";
+import { SellHome, BuyHome } from "@/components/monami/HomeViews";
 import { ProfileView } from "@/components/monami/ProfileView";
 import { TreeBackground, type TreeStage } from "@/components/monami/tree3d/TreeBackground";
 import { agentReplies, alerts, analysis, products as seed, type Product } from "@/data/mock";
@@ -24,9 +25,10 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-type View = "inventory" | "analysis" | "profile";
+type View = "home" | "inventory" | "analysis" | "profile";
 
 const TREE_BY_VIEW: Record<View, TreeStage> = {
+  home: "full",
   inventory: "full",
   analysis: "fruit",
   profile: "roots",
@@ -34,7 +36,7 @@ const TREE_BY_VIEW: Record<View, TreeStage> = {
 
 function Index() {
   const [profile, setProfile] = useState<Profile>();
-  const [view, setView] = useState<View>("inventory");
+  const [view, setView] = useState<View>("home");
   const [items, setItems] = useState<Product[]>(seed);
   const [favorites, setFavorites] = useState<string[]>([]);
   const [pulse, setPulse] = useState<string>();
@@ -67,9 +69,11 @@ function Index() {
 
   const onDone = (p: Profile) => {
     setProfile(p);
-    const total = seed.reduce((a, x) => a + x.marketPrice, 0).toLocaleString("fr-FR");
-    const intentLine = p.intent === "sell" ? "Que vendons-nous ?" : "Je te préviens dès qu'une bonne occasion passe.";
-    setMessages([{ id: 0, role: "agent", text: `Ravi de te connaître ! Ton inventaire ${p.niche.emoji} vaut ${total} € aujourd'hui. ${intentLine}` }]);
+    const text =
+      p.intent === "sell"
+        ? `Voilà comment se porte « ${p.item} » : eBay est ton meilleur pari pour le vendre vite.`
+        : `J'ai trouvé quelques offres pour « ${p.item} ». Méfie-toi de celle marquée en rouge !`;
+    setMessages([{ id: 0, role: "agent", text }]);
   };
 
   const onSend = (text: string, photo?: string) => {
@@ -101,13 +105,24 @@ function Index() {
   if (!profile) return <Onboarding onDone={onDone} />;
 
   return (
-    <div className="relative flex h-dvh flex-col overflow-hidden">
-      <TreeBackground stage={TREE_BY_VIEW[view]} />
+    <motion.div
+      className="relative flex h-dvh flex-col overflow-hidden"
+      initial={{ scale: 1.25, filter: "blur(24px)", opacity: 0 }}
+      animate={{ scale: 1, filter: "blur(0px)", opacity: 1 }}
+      transition={{ duration: 1.1, ease: [0.2, 0.8, 0.2, 1] }}
+    >
+      <TreeBackground stage={TREE_BY_VIEW[view]} bloom={profile.intent === "sell" ? "leaves" : "fruits"} />
       <TopBar onProfile={() => setView("profile")} />
       <main className="relative z-10 min-h-0 flex-1 overflow-y-auto px-4 pt-2 sm:px-6">
         <div className="mx-auto h-full max-w-6xl">
           <AnimatePresence mode="wait">
-            {view === "inventory" ? (
+            {view === "home" ? (
+              profile.intent === "sell" ? (
+                <SellHome key="home" niche={profile.niche} item={profile.item} photo={profile.photos[0]} />
+              ) : (
+                <BuyHome key="home" niche={profile.niche} item={profile.item} />
+              )
+            ) : view === "inventory" ? (
               <ProductGrid key="inv" items={items} pulseId={pulse} favorites={favorites} onToggleFav={toggleFav} />
             ) : view === "analysis" ? (
               <AnalysisView key="ana" onConfirm={confirm} onCancel={() => setView("inventory")} />
@@ -129,6 +144,6 @@ function Index() {
           )}
         </AnimatePresence>
       </div>
-    </div>
+    </motion.div>
   );
 }
