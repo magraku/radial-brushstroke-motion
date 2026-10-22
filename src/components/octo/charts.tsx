@@ -1,10 +1,12 @@
 import type { Range } from "@/data/mock";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import { useId } from "react";
 
 export const eur = (n: number) => `${n.toLocaleString("fr-FR")} €`;
 
 export function RangeToggle({ value, onChange }: { value: Range; onChange: (r: Range) => void }) {
+  const id = useId();
   return (
     <div className="inline-flex rounded-full bg-muted p-1 text-xs font-medium">
       {(["1M", "6M", "1Y"] as Range[]).map((r) => (
@@ -17,7 +19,7 @@ export function RangeToggle({ value, onChange }: { value: Range; onChange: (r: R
           )}
         >
           {value === r && (
-            <motion.span layoutId={`range-${Object.keys(value).length}`} className="absolute inset-0 rounded-full bg-primary" />
+            <motion.span layoutId={id} className="absolute inset-0 rounded-full bg-primary" />
           )}
           <span className="relative">{r}</span>
         </button>

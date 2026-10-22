@@ -52,24 +52,17 @@ export function Box3D({ box, index, onOpen, opening, pulse }: { box: BoxGroup; i
             <div className={cn(face, "bg-cardboard-dark")} style={{ transform: `rotateY(180deg) translateZ(${half}px)` }} />
             {/* inside bottom */}
             <div className={cn(face, "bg-cardboard-dark")} style={{ transform: `rotateX(90deg) translateZ(${-half + 2}px)` }} />
-            {/* lid flaps */}
-            <motion.div
-              className={cn(face, "origin-[50%_100%] bg-cardboard-light")}
-              style={{ transform: `rotateX(90deg) translateZ(${half}px)` }}
-              animate={opening ? { rotateX: 90 } : {}}
-            >
-              <div className="absolute inset-y-0 left-1/2 w-6 -translate-x-1/2 bg-accent/40" />
-            </motion.div>
-            {opening && (
-              <>
-                <motion.div
-                  className="absolute left-0 rounded-[14px] bg-cardboard-light"
-                  style={{ width: S, height: half, top: 0, transformOrigin: "50% 0%", transform: `translateY(${-half}px) rotateX(90deg) translateZ(${half}px)` }}
-                  animate={{ rotateX: [90, -60] }}
-                  transition={{ duration: 0.45 }}
-                />
-              </>
-            )}
+            {/* lid: positioned as the top face, hinged on the back edge */}
+            <div className="absolute inset-0" style={{ transformStyle: "preserve-3d", transform: `rotateX(90deg) translateZ(${half}px)` }}>
+              <motion.div
+                className={cn(face, "bg-cardboard-light")}
+                style={{ transformOrigin: "50% 0%" }}
+                animate={{ rotateX: opening ? 115 : 0 }}
+                transition={{ type: "spring", stiffness: 120, damping: 12 }}
+              >
+                <div className="absolute inset-y-0 left-1/2 w-6 -translate-x-1/2 bg-accent/40" />
+              </motion.div>
+            </div>
           </div>
           {/* floor shadow */}
           <div className="absolute -bottom-10 left-1/2 h-6 w-36 -translate-x-1/2 rounded-full bg-ink/15 blur-md transition-all group-hover:w-28 group-hover:bg-ink/10" />
