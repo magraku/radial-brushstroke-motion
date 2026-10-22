@@ -6,6 +6,8 @@ import { ProductGrid } from "@/components/monami/ProductGrid";
 import { AnalysisView } from "@/components/monami/AnalysisView";
 import { ChatDock, type Msg } from "@/components/monami/ChatDock";
 import { Onboarding, type Profile } from "@/components/monami/Onboarding";
+import { ProfileView } from "@/components/monami/ProfileView";
+import { TreeCamera, type TreeStage } from "@/components/monami/TreeCamera";
 import { agentReplies, alerts, analysis, products as seed, type Product } from "@/data/mock";
 
 export const Route = createFileRoute("/")({
@@ -22,10 +24,19 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
+type View = "inventory" | "analysis" | "profile";
+
+const TREE_BY_VIEW: Record<View, TreeStage> = {
+  inventory: "full",
+  analysis: "fruit",
+  profile: "roots",
+};
+
 function Index() {
   const [profile, setProfile] = useState<Profile>();
-  const [view, setView] = useState<"inventory" | "analysis">("inventory");
+  const [view, setView] = useState<View>("inventory");
   const [items, setItems] = useState<Product[]>(seed);
+  const [favorites, setFavorites] = useState<string[]>([]);
   const [pulse, setPulse] = useState<string>();
   const [toast, setToast] = useState<(typeof alerts)[number]>();
   const [typing, setTyping] = useState(false);
@@ -42,6 +53,8 @@ function Index() {
     const t = setTimeout(() => setToast(undefined), 6000);
     return () => clearTimeout(t);
   }, [toast]);
+
+  const toggleFav = (id: string) => setFavorites((f) => (f.includes(id) ? f.filter((x) => x !== id) : [...f, id]));
 
   const reply = (text: string, after?: () => void) => {
     setTyping(true);
@@ -89,16 +102,17 @@ function Index() {
 
   return (
     <div className="relative flex h-dvh flex-col overflow-hidden">
-      <div className="pointer-events-none absolute -right-40 -top-40 size-[34rem] rounded-full bg-primary/[0.05] blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-52 -left-52 size-[30rem] rounded-full bg-accent/[0.07] blur-3xl" />
-      <TopBar />
+      <TreeCamera stage={TREE_BY_VIEW[view]} />
+      <TopBar onProfile={() => setView("profile")} />
       <main className="relative z-10 min-h-0 flex-1 overflow-y-auto px-4 pt-2 sm:px-6">
         <div className="mx-auto h-full max-w-6xl">
           <AnimatePresence mode="wait">
             {view === "inventory" ? (
-              <ProductGrid key="inv" items={items} pulseId={pulse} />
-            ) : (
+              <ProductGrid key="inv" items={items} pulseId={pulse} favorites={favorites} onToggleFav={toggleFav} />
+            ) : view === "analysis" ? (
               <AnalysisView key="ana" onConfirm={confirm} onCancel={() => setView("inventory")} />
+            ) : (
+              <ProfileView key="prof" items={items} favorites={favorites} onToggleFav={toggleFav} onBack={() => setView("inventory")} />
             )}
           </AnimatePresence>
         </div>
