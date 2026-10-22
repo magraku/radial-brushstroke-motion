@@ -196,7 +196,7 @@ function Grass() {
     const m: THREE.Matrix4[] = [], c: THREE.Color[] = [];
     for (let i = 0; i < 2600; i++) {
       const rad = Math.pow(r(), 0.6) * 4.2, a = r() * Math.PI * 2;
-      const h = (0.45 + r() * 0.7) * (1.15 - rad / 6);
+      const h = (0.3 + r() * 0.5) * (1.15 - rad / 6);
       const q = new THREE.Quaternion().setFromEuler(new THREE.Euler((r() - 0.5) * 0.5, r() * Math.PI * 2, (r() - 0.5) * 0.5));
       m.push(new THREE.Matrix4().compose(new THREE.Vector3(Math.cos(a) * rad, -0.08, Math.sin(a) * rad), q, new THREE.Vector3(1, h, 1)));
       c.push((shades[i % shades.length] ?? new THREE.Color("#c9b06a")).clone().multiplyScalar(0.85 + r() * 0.3));
