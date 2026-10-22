@@ -98,7 +98,7 @@ export function SellHome({ niche, item, photo }: { niche: Niche; item: string; p
 const SLOTS = [
   { x: 14, y: 30 },
   { x: 86, y: 30 },
-  { x: 50, y: 6 },
+  { x: 50, y: 16 },
   { x: 12, y: 66 },
   { x: 88, y: 66 },
 ];
@@ -135,7 +135,7 @@ export function BuyHome({ niche, item, favorites = [], onFavorite }: { niche: Ni
                   </span>
                 </div>
                 <div className="mt-1.5 flex items-baseline gap-1.5">
-                  <span className="text-lg font-semibold text-primary">{eur(o.price)}</span>
+                  <span className="shrink-0 whitespace-nowrap text-lg font-semibold text-primary">{eur(o.price)}</span>
                   <span className="text-[10px] text-muted-foreground">
                     {o.delta > 0 ? "+" : ""}
                     {o.delta}% {copy.vsMarket}
