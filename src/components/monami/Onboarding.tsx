@@ -5,7 +5,7 @@ import { customNiche, marketplaces, niches, type Niche } from "@/data/mock";
 import { copy } from "@/lib/copy";
 import { Mascot } from "./Mascot";
 import { MonamiLogo } from "./MonamiLogo";
-import { TreeCamera, type TreeStage } from "./TreeCamera";
+import { TreeBackground, type TreeStage } from "./tree3d/TreeBackground";
 import { eur } from "./charts";
 import { cn } from "@/lib/utils";
 
@@ -70,7 +70,7 @@ export function Onboarding({ onDone }: { onDone: (p: Profile) => void }) {
 
   return (
     <div className="relative flex h-dvh flex-col items-center overflow-hidden px-4">
-      <TreeCamera stage={TREE_BY_STEP[step]} />
+      <TreeBackground stage={TREE_BY_STEP[step]} />
 
       <header className="relative z-10 flex h-16 w-full max-w-2xl items-center">
         <MonamiLogo className="h-5 text-ink" />
