@@ -9,7 +9,7 @@ import { Onboarding, type Profile } from "@/components/monami/Onboarding";
 import { SellHome, BuyHome } from "@/components/monami/HomeViews";
 import { ProfileView } from "@/components/monami/ProfileView";
 import { TreeBackground, type TreeStage } from "@/components/monami/tree3d/TreeBackground";
-import { agentReplies, alerts, analysis, type Product, type Offer } from "@/data/mock";
+import { agentReplies, alerts, analysis, niches, type Product, type Offer } from "@/data/mock";
 import { copy } from "@/lib/copy";
 import { DEMO_KEY, restoreDemo, chatRequest } from "@/lib/demo-profile";
 
@@ -57,6 +57,7 @@ function Index() {
     if (saved) {
       setProfile(saved.profile); setItems(saved.items); setFavorites(saved.favorites); setSavedOffers(saved.savedOffers);
       setMessages([{ id: 0, role: "agent", text: copy.chatWelcome }]); setReturning(true);
+      idRef.current = saved.items.reduce((max, p) => Math.max(max, Number(p.id.replace("item-", "")) || 0), 0) + 1;
     }
     setLoaded(true);
   }, []);
@@ -115,11 +116,13 @@ function Index() {
     const request = chatRequest(text);
     const intent = photo ? "sell" : request.intent ?? pending;
     if (intent) {
-      if (!request.item || /^(ça|un produit|un objet)$/i.test(request.item)) {
+      if (!photo && (!request.item || /^(ça|un produit|un objet)$/i.test(request.item))) {
         setPending(intent); reply(intent === "sell" ? copy.chatSellAsk : copy.chatBuyAsk); return;
       }
       if (intent === "sell" && !photo) { setPending("sell"); setProfile({ ...profile, intent, item: request.item, photos: [] }); reply(copy.chatSellAsk); return; }
-      const p = { ...profile, intent, item: photo && /ça|photo/i.test(request.item) ? profile.item : request.item, photos: photo ? [photo] : [] };
+      const item = photo && /ça|photo/i.test(request.item) ? profile.item : request.item;
+      const nicheId = /rtx|gpu|cpu|ryzen|geforce/i.test(item) ? "gpu" : /jordan|nike|sneaker|dunk/i.test(item) ? "sneakers" : /pokémon|pokemon|dracaufeu|pikachu|display 151/i.test(item) ? "pokemon" : profile.niche.id;
+      const p = { ...profile, niche: niches.find((n) => n.id === nicheId) ?? profile.niche, intent, item, photos: photo ? [photo] : [] };
       setProfile(p); setPending(undefined);
       if (intent === "sell") addSellingItem(p);
       reply(intent === "sell" ? copy.chatSellReady(p.item) : copy.chatBuyReady(p.item), () => setView("home"));
