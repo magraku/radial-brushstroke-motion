@@ -7,7 +7,7 @@ import { AnalysisView } from "@/components/monami/AnalysisView";
 import { ChatDock, type Msg } from "@/components/monami/ChatDock";
 import { Onboarding, type Profile } from "@/components/monami/Onboarding";
 import { ProfileView } from "@/components/monami/ProfileView";
-import { TreeCamera, type TreeStage } from "@/components/monami/TreeCamera";
+import { TreeBackground, type TreeStage } from "@/components/monami/tree3d/TreeBackground";
 import { agentReplies, alerts, analysis, products as seed, type Product } from "@/data/mock";
 
 export const Route = createFileRoute("/")({
@@ -102,7 +102,7 @@ function Index() {
 
   return (
     <div className="relative flex h-dvh flex-col overflow-hidden">
-      <TreeCamera stage={TREE_BY_VIEW[view]} />
+      <TreeBackground stage={TREE_BY_VIEW[view]} />
       <TopBar onProfile={() => setView("profile")} />
       <main className="relative z-10 min-h-0 flex-1 overflow-y-auto px-4 pt-2 sm:px-6">
         <div className="mx-auto h-full max-w-6xl">
