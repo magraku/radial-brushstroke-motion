@@ -53,10 +53,11 @@ export function Onboarding({ onDone }: { onDone: (p: Profile) => void }) {
   const stepIdx = Math.min(steps.indexOf(step === "ready" ? "detail" : step), 3);
   const bloom: Bloom = intent === "sell" ? "leaves" : intent === "buy" ? "fruits" : "none";
 
-  const finish = () => {
+  const finish = (override?: string) => {
     if (!niche || !intent) return;
     setStep("ready");
-    const p: Profile = { hasAccount, niche, intent, item: item.trim() || (intent === "sell" ? niche.name : item.trim()), photos };
+    const name = (override ?? item).trim();
+    const p: Profile = { hasAccount, niche, intent, item: name || niche.name, photos };
     setTimeout(() => setLeaving(true), 1300);
     setTimeout(() => onDone(p), 2200);
   };
@@ -233,7 +234,7 @@ export function Onboarding({ onDone }: { onDone: (p: Profile) => void }) {
                 </div>
                 <p className="text-xs text-muted-foreground">{copy.obSellPhotosHint}</p>
                 <input value={item} onChange={(e) => setItem(e.target.value)} placeholder={copy.obSellName} className="w-full rounded-full border border-border bg-muted/50 px-4 py-2.5 text-sm outline-none placeholder:text-muted-foreground focus:border-primary" />
-                <button onClick={finish} disabled={photos.length === 0} className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary py-2.5 text-sm font-semibold text-primary-foreground shadow-md transition hover:brightness-110 disabled:opacity-40">
+                <button onClick={() => finish()} disabled={photos.length === 0} className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary py-2.5 text-sm font-semibold text-primary-foreground shadow-md transition hover:brightness-110 disabled:opacity-40">
                   {copy.obContinue} <ArrowRight className="size-4" />
                 </button>
               </div>
@@ -258,7 +259,10 @@ export function Onboarding({ onDone }: { onDone: (p: Profile) => void }) {
                 </form>
                 <div className="flex flex-wrap gap-2">
                   {(suggestions[niche.id] ?? []).map((s) => (
-                    <button key={s} onClick={() => setItem(s)} className="rounded-full bg-card px-3 py-1 text-xs font-medium text-muted-foreground shadow-sm transition hover:text-primary">
+                    <button key={s} onClick={() => {
+                        setItem(s);
+                        finish(s);
+                      }} className="rounded-full bg-card px-3 py-1 text-xs font-medium text-muted-foreground shadow-sm transition hover:text-primary">
                       {s}
                     </button>
                   ))}
