@@ -232,7 +232,7 @@ export function Onboarding({ onDone }: { onDone: (p: Profile) => void }) {
                   )}
                 </div>
                 <p className="text-xs text-muted-foreground">{copy.obSellPhotosHint}</p>
-                <input value={item} onChange={(e) => setItem(e.target.value)} placeholder={copy.obSellName} className="w-full rounded-full border border-border bg-background/40 px-4 py-2.5 text-sm outline-none placeholder:text-muted-foreground focus:border-primary" />
+                <input value={item} onChange={(e) => setItem(e.target.value)} placeholder={copy.obSellName} className="w-full rounded-full border border-border bg-muted/50 px-4 py-2.5 text-sm outline-none placeholder:text-muted-foreground focus:border-primary" />
                 <button onClick={finish} disabled={photos.length === 0} className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary py-2.5 text-sm font-semibold text-primary-foreground shadow-md transition hover:brightness-110 disabled:opacity-40">
                   {copy.obContinue} <ArrowRight className="size-4" />
                 </button>
