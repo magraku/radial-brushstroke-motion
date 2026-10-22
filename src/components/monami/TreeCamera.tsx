@@ -14,11 +14,11 @@ import { motion } from "framer-motion";
 export type TreeStage = "roots" | "trunk" | "branch" | "canopy" | "fruit" | "full";
 
 const STAGES: Record<TreeStage, { scale: number; x: string; y: string }> = {
-  roots: { scale: 1.9, x: "0%", y: "34%" },
-  trunk: { scale: 1.45, x: "0%", y: "10%" },
-  branch: { scale: 1.8, x: "-18%", y: "-10%" },
-  canopy: { scale: 1.5, x: "6%", y: "-30%" },
-  fruit: { scale: 2.1, x: "14%", y: "-34%" },
+  roots: { scale: 1.9, x: "0%", y: "-60%" },
+  trunk: { scale: 1.45, x: "0%", y: "-18%" },
+  branch: { scale: 1.3, x: "27%", y: "10%" },
+  canopy: { scale: 1.5, x: "-11%", y: "45%" },
+  fruit: { scale: 2.1, x: "-40%", y: "60%" },
   full: { scale: 1, x: "0%", y: "0%" },
 };
 
