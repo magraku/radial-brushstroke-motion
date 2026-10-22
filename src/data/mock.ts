@@ -103,9 +103,9 @@ export function groupBoxes(list: Product[], mode: "family" | "market"): BoxGroup
 
 export function priceHint(p: Product) {
   const diff = Math.round(((p.listedPrice - p.marketPrice) / p.marketPrice) * 100);
-  if (diff > 8) return { tone: "warn" as const, text: `Votre prix est ${diff}% au-dessus de la médiane du marché, pensez à baisser à ${Math.round(p.marketPrice * 1.05)} €.` };
-  if (diff < -8) return { tone: "good" as const, text: `Votre prix est ${Math.abs(diff)}% sous le marché : vous pouvez monter à ${Math.round(p.marketPrice * 0.98)} €.` };
-  return { tone: "ok" as const, text: "Votre prix est aligné avec le marché." };
+  if (diff > 8) return { tone: "warn" as const, text: `Ton prix est ${diff}% au-dessus de la médiane du marché, pense à baisser à ${Math.round(p.marketPrice * 1.05)} €.` };
+  if (diff < -8) return { tone: "good" as const, text: `Ton prix est ${Math.abs(diff)}% sous le marché : tu peux monter à ${Math.round(p.marketPrice * 0.98)} €.` };
+  return { tone: "ok" as const, text: "Ton prix est aligné avec le marché." };
 }
 
 // Analysis for a newly added product
