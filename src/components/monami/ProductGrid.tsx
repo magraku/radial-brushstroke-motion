@@ -1,17 +1,35 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { MessageCircle, TrendingDown, TrendingUp } from "lucide-react";
+import { Heart, MessageCircle, TrendingDown, TrendingUp } from "lucide-react";
 import { families, marketplaces, type Product } from "@/data/mock";
 import { copy } from "@/lib/copy";
 import { eur } from "./charts";
 import { ProductDetail, ProductThumb, Spark, statusStyle } from "./ProductDetail";
 import { cn } from "@/lib/utils";
 
-export function ProductGrid({ items, pulseId }: { items: Product[]; pulseId?: string | undefined }) {
+export function ProductGrid({
+  items,
+  pulseId,
+  favorites = [],
+  onToggleFav,
+}: {
+  items: Product[];
+  pulseId?: string | undefined;
+  favorites?: string[];
+  onToggleFav?: (id: string) => void;
+}) {
   const [filter, setFilter] = useState<string>("all");
   const [sel, setSel] = useState<Product>();
 
-  if (sel) return <ProductDetail product={sel} onBack={() => setSel(undefined)} />;
+  if (sel)
+    return (
+      <ProductDetail
+        product={sel}
+        onBack={() => setSel(undefined)}
+        fav={favorites.includes(sel.id)}
+        onToggleFav={onToggleFav ? () => onToggleFav(sel.id) : undefined}
+      />
+    );
 
   const shown = filter === "all" ? items : items.filter((p) => p.family === filter);
   const total = items.reduce((a, p) => a + p.marketPrice, 0);
@@ -80,6 +98,29 @@ export function ProductGrid({ items, pulseId }: { items: Product[]; pulseId?: st
                 </div>
               </div>
               <Spark p={p} />
+              {onToggleFav && (
+                <span
+                  role="button"
+                  tabIndex={0}
+                  aria-label={favorites.includes(p.id) ? copy.favRemove : copy.favAdd}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleFav(p.id);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.stopPropagation();
+                      onToggleFav(p.id);
+                    }
+                  }}
+                  className={cn(
+                    "grid size-8 shrink-0 place-items-center rounded-full transition hover:bg-muted",
+                    favorites.includes(p.id) ? "text-primary" : "text-muted-foreground/50 hover:text-primary",
+                  )}
+                >
+                  <Heart className={cn("size-4", favorites.includes(p.id) && "fill-current")} />
+                </span>
+              )}
             </motion.button>
           );
         })}

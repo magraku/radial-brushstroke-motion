@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Area, AreaChart, CartesianGrid, ComposedChart, Line, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { ArrowLeft, Lightbulb, MessageCircle } from "lucide-react";
+import { ArrowLeft, Heart, Lightbulb, MessageCircle } from "lucide-react";
 import { type Product, type Range, priceHint, series, marketplaces } from "@/data/mock";
 import { copy } from "@/lib/copy";
 import { Card, ChartTip, RangeToggle, eur } from "./charts";
@@ -43,7 +43,7 @@ export function Spark({ p }: { p: Product }) {
   );
 }
 
-export function ProductDetail({ product, onBack }: { product: Product; onBack: () => void }) {
+export function ProductDetail({ product, onBack, fav, onToggleFav }: { product: Product; onBack: () => void; fav?: boolean; onToggleFav?: () => void }) {
   const [range, setRange] = useState<Range>("6M");
   const prod = series(product.id, product.marketPrice, range).map((d) => ({ ...d, band: [d.min, d.max] }));
   const hint = priceHint(product);
@@ -76,10 +76,21 @@ export function ProductDetail({ product, onBack }: { product: Product; onBack: (
             </span>
           </div>
         </div>
-        <div className="ml-auto text-right">
-          <div className="text-xl font-semibold">{eur(product.listedPrice)}</div>
-          <div className="text-xs text-muted-foreground">
-            {copy.market} {eur(product.marketPrice)}
+        <div className="ml-auto flex items-center gap-2">
+          {onToggleFav && (
+            <button
+              onClick={onToggleFav}
+              aria-label={fav ? copy.favRemove : copy.favAdd}
+              className={cn("grid size-9 place-items-center rounded-full transition hover:bg-muted", fav ? "text-primary" : "text-muted-foreground/50 hover:text-primary")}
+            >
+              <Heart className={cn("size-5", fav && "fill-current")} />
+            </button>
+          )}
+          <div className="text-right">
+            <div className="text-xl font-semibold">{eur(product.listedPrice)}</div>
+            <div className="text-xs text-muted-foreground">
+              {copy.market} {eur(product.marketPrice)}
+            </div>
           </div>
         </div>
       </div>
