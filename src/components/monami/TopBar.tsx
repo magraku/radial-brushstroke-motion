@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Bell, ShieldAlert, Sparkle } from "lucide-react";
 import { alerts } from "@/data/mock";
 import { copy } from "@/lib/copy";
-import { InkBurst } from "./InkBurst";
+import { MonamiLogo } from "./MonamiLogo";
 import { eur } from "./charts";
 import { cn } from "@/lib/utils";
 
@@ -35,12 +35,7 @@ export function TopBar() {
   const [open, setOpen] = useState(false);
   return (
     <header className="relative z-30 flex h-14 items-center gap-3 px-4 sm:px-6">
-      <div className="flex items-center gap-2">
-        <InkBurst className="size-8 text-primary" count={8} seed={11} />
-        <span className="text-lg font-semibold tracking-tight">
-          Octo<span className="text-primary">Handy</span>
-        </span>
-      </div>
+      <MonamiLogo className="h-4.5 text-ink" />
       <div className="ml-auto flex items-center gap-2">
         <div className="relative">
           <button onClick={() => setOpen(!open)} aria-label={copy.alerts} className="relative grid size-9 place-items-center rounded-full hover:bg-muted">

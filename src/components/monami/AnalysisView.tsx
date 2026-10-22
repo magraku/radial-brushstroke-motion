@@ -5,8 +5,8 @@ import { Check, Clock, Search, ShoppingBag, X } from "lucide-react";
 import { analysis as A, marketplaces, series, type Range } from "@/data/mock";
 import { copy } from "@/lib/copy";
 import { Card, ChartTip, RangeToggle, eur } from "./charts";
-import { ProductThumb } from "./BoxDetail";
-import { InkBurst } from "./InkBurst";
+import { ProductThumb } from "./ProductDetail";
+import { Mascot } from "./Mascot";
 
 function Kpi({ icon: Icon, label, value }: { icon: typeof Search; label: string; value: string }) {
   return (
@@ -29,7 +29,7 @@ export function AnalysisView({ onConfirm, onCancel }: { onConfirm: () => void; o
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative">
           <ProductThumb src={A.image} alt={A.name} className="size-14 rounded-2xl" />
-          <InkBurst className="absolute -right-3 -top-3 size-8 text-accent" count={10} />
+          <Mascot className="absolute -right-4 -top-4 w-8 text-accent" />
         </div>
         <div>
           <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{copy.analysis}</div>

@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowUp, ChevronUp, ImagePlus, X } from "lucide-react";
 import { copy } from "@/lib/copy";
-import { InkBurst } from "./InkBurst";
+import { Mascot } from "./Mascot";
 import { cn } from "@/lib/utils";
 
 export type Msg = { id: number; role: "user" | "agent"; text: string; photo?: string | undefined };
@@ -35,7 +35,7 @@ export function ChatDock({ messages, typing, onSend }: { messages: Msg[]; typing
             <AnimatePresence initial={false}>
               {shown.map((m) => (
                 <motion.div key={m.id} layout initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className={cn("flex items-end gap-2", m.role === "user" && "justify-end")}>
-                  {m.role === "agent" && <InkBurst className="mb-1 size-5 shrink-0 text-primary" />}
+                  {m.role === "agent" && <Mascot className="mb-1 w-5 shrink-0 text-ink" />}
                   <div className={cn("max-w-[80%] rounded-2xl px-3 py-1.5 text-sm", m.role === "user" ? "bg-primary text-primary-foreground" : "bg-card shadow-sm")}>
                     {m.photo && <img src={m.photo} alt="" className="mb-1 h-14 rounded-lg object-cover" />}
                     {m.text}
@@ -44,7 +44,7 @@ export function ChatDock({ messages, typing, onSend }: { messages: Msg[]; typing
               ))}
               {typing && (
                 <motion.div key="typing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <InkBurst animate className="size-5 text-primary" />
+                  <Mascot float className="w-5 text-primary" />
                   {copy.thinking}
                 </motion.div>
               )}

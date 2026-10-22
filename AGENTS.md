@@ -9,4 +9,5 @@
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
 
-- OctoHandy is a single-page app: all mock data lives in src/data/mock.ts and all UI copy (French) in src/lib/copy.ts, so both can be swapped for an API / translations later.
+- monami is a single-page app: all mock data lives in src/data/mock.ts and all UI copy (French) in src/lib/copy.ts, so both can be swapped for an API / translations later.
+- All UI components live in src/components/monami/; the brand wordmark (MonamiLogo) and mascot (Mascot) are inline SVGs converted from the user's VectorCraft file — keep them as source, not CDN assets.
