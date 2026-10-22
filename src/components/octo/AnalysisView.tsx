@@ -153,7 +153,7 @@ export function AnalysisView({ onConfirm, onCancel }: { onConfirm: () => void; o
       <Card title={copy.platforms}>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {A.platforms.map((p, i) => {
-            const m = marketplaces[p.id];
+            const m = marketplaces[p.id]!;
             return (
               <motion.div key={p.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }} className="rounded-2xl border border-border p-3">
                 <div className="flex items-center gap-2">

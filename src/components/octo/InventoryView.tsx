@@ -6,7 +6,7 @@ import { Box3D } from "./Box3D";
 import { BoxDetail } from "./BoxDetail";
 import { cn } from "@/lib/utils";
 
-export function InventoryView({ items, pulseId }: { items: Product[]; pulseId?: string }) {
+export function InventoryView({ items, pulseId }: { items: Product[]; pulseId?: string | undefined }) {
   const [mode, setMode] = useState<"family" | "market">("family");
   const [opening, setOpening] = useState<string>();
   const [open, setOpen] = useState<BoxGroup>();

@@ -59,7 +59,7 @@ const hash = (str: string) => [...str].reduce((a, c) => a * 31 + c.charCodeAt(0)
 const RANGE_POINTS: Record<Range, { n: number; label: (i: number, n: number) => string }> = {
   "1M": { n: 30, label: (i, n) => `J-${n - 1 - i}` },
   "6M": { n: 26, label: (i, n) => `S-${n - 1 - i}` },
-  "1Y": { n: 12, label: (i) => ["Nov", "Déc", "Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Août", "Sep", "Oct"][i] },
+  "1Y": { n: 12, label: (i) => ["Nov", "Déc", "Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Août", "Sep", "Oct"][i]! },
 };
 
 export function series(key: string, base: number, range: Range, drift = 0.1): Point[] {
@@ -80,7 +80,7 @@ export function series(key: string, base: number, range: Range, drift = 0.1): Po
   });
 }
 
-export type BoxGroup = { id: string; label: string; icon: string; accent?: string; items: Product[]; value: number; trend: number };
+export type BoxGroup = { id: string; label: string; icon: string; accent?: string | undefined; items: Product[]; value: number; trend: number };
 
 export function groupBoxes(list: Product[], mode: "family" | "market"): BoxGroup[] {
   const keys = mode === "family" ? Object.keys(families) : Object.keys(marketplaces);
@@ -90,9 +90,9 @@ export function groupBoxes(list: Product[], mode: "family" | "market"): BoxGroup
       const r = rng(hash(k) + 3);
       return {
         id: k,
-        label: mode === "family" ? families[k].name : marketplaces[k].name,
-        icon: mode === "family" ? families[k].emoji : marketplaces[k].name[0],
-        accent: mode === "market" ? marketplaces[k].color : undefined,
+        label: mode === "family" ? families[k]!.name : marketplaces[k]!.name,
+        icon: mode === "family" ? families[k]!.emoji : marketplaces[k]!.name[0]!,
+        accent: mode === "market" ? marketplaces[k]!.color : undefined,
         items,
         value: items.reduce((a, p) => a + p.marketPrice, 0),
         trend: Math.round((r() - 0.35) * 240) / 10,

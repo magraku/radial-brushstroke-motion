@@ -24,7 +24,7 @@ export function ProductThumb({ src, alt, className }: { src: string; alt: string
 
 function Spark({ p }: { p: Product }) {
   const data = series(p.id, p.marketPrice, "1M");
-  const up = data[data.length - 1].value >= data[0].value;
+  const up = data[data.length - 1]!.value >= data[0]!.value;
   const c = up ? "var(--success)" : "var(--destructive)";
   return (
     <div className="h-8 w-20">
@@ -46,7 +46,7 @@ function Spark({ p }: { p: Product }) {
 export function BoxDetail({ box, onBack }: { box: BoxGroup; onBack: () => void }) {
   const [tab, setTab] = useState<"micro" | "macro">("micro");
   const [range, setRange] = useState<Range>("6M");
-  const [sel, setSel] = useState<Product>(box.items[0]);
+  const [sel, setSel] = useState<Product>(box.items[0]!);
   const macro = series(box.id + "box", box.value, range, 0.2);
   const prod = series(sel.id, sel.marketPrice, range).map((d) => ({ ...d, band: [d.min, d.max] }));
   const hint = priceHint(sel);
@@ -120,7 +120,7 @@ export function BoxDetail({ box, onBack }: { box: BoxGroup; onBack: () => void }
                         {p.status === "messages" && <MessageCircle className="size-3" />}
                         {s.label}
                       </span>
-                      <span className="text-muted-foreground">{marketplaces[p.market].name}</span>
+                      <span className="text-muted-foreground">{marketplaces[p.market]?.name}</span>
                     </div>
                   </div>
                   <Spark p={p} />

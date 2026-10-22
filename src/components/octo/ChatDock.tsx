@@ -5,7 +5,7 @@ import { copy } from "@/lib/copy";
 import { InkBurst } from "./InkBurst";
 import { cn } from "@/lib/utils";
 
-export type Msg = { id: number; role: "user" | "agent"; text: string; photo?: string };
+export type Msg = { id: number; role: "user" | "agent"; text: string; photo?: string | undefined };
 
 export function ChatDock({ messages, typing, onSend }: { messages: Msg[]; typing: boolean; onSend: (text: string, photo?: string) => void }) {
   const [text, setText] = useState("");
