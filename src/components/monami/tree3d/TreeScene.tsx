@@ -196,9 +196,9 @@ function Grass() {
     const m: THREE.Matrix4[] = [], c: THREE.Color[] = [];
     for (let i = 0; i < 2600; i++) {
       const rad = Math.pow(r(), 0.6) * 4.2, a = r() * Math.PI * 2;
-      const h = (0.35 + r() * 0.55) * (1.15 - rad / 6);
+      const h = (0.45 + r() * 0.7) * (1.15 - rad / 6);
       const q = new THREE.Quaternion().setFromEuler(new THREE.Euler((r() - 0.5) * 0.5, r() * Math.PI * 2, (r() - 0.5) * 0.5));
-      m.push(new THREE.Matrix4().compose(new THREE.Vector3(Math.cos(a) * rad, -0.32, Math.sin(a) * rad), q, new THREE.Vector3(1, h, 1)));
+      m.push(new THREE.Matrix4().compose(new THREE.Vector3(Math.cos(a) * rad, -0.08, Math.sin(a) * rad), q, new THREE.Vector3(1, h, 1)));
       c.push((shades[i % shades.length] ?? new THREE.Color("#c9b06a")).clone().multiplyScalar(0.85 + r() * 0.3));
     }
     return { blade, m, c, mat: new THREE.MeshStandardMaterial({ roughness: 0.85, side: THREE.DoubleSide }), ground: new THREE.CircleGeometry(4.6, 48) };
@@ -214,7 +214,7 @@ function Grass() {
   useEffect(() => () => { data.blade.dispose(); data.mat.dispose(); data.ground.dispose(); }, [data]);
   return (
     <group>
-      <mesh geometry={data.ground} rotation-x={-Math.PI / 2} position-y={-0.3}>
+      <mesh geometry={data.ground} rotation-x={-Math.PI / 2} position-y={-0.06}>
         <meshStandardMaterial color="#8f7d47" roughness={1} transparent opacity={0.9} />
       </mesh>
       <instancedMesh ref={ref} args={[data.blade, data.mat, data.m.length]} frustumCulled={false} />
