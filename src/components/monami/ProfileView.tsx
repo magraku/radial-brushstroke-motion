@@ -31,18 +31,20 @@ function Row({ p, action }: { p: Product; action?: React.ReactNode }) {
 export function ProfileView({
   items,
   favorites,
+  savedOffers = [],
   onToggleFav,
   onBack,
 }: {
   items: Product[];
   favorites: string[];
+  savedOffers?: Product[];
   onToggleFav: (id: string) => void;
   onBack: () => void;
 }) {
   const selling = items.filter((p) => p.status === "listed" || p.status === "messages");
   const soldCount = items.filter((p) => p.status === "sold").length;
   const total = selling.reduce((a, p) => a + p.marketPrice, 0);
-  const favs = items.filter((p) => favorites.includes(p.id));
+  const favs = [...items, ...savedOffers].filter((p) => favorites.includes(p.id));
 
   return (
     <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 24 }} className="mx-auto w-full max-w-3xl space-y-6 pb-4">
@@ -53,13 +55,13 @@ export function ProfileView({
         <h1 className="text-2xl font-semibold sm:text-3xl">{copy.profile}</h1>
       </div>
 
-      <div className="surface flex items-center gap-4 rounded-3xl p-5">
+      <div className="flex flex-wrap items-center gap-4 py-3">
         <div className="grid size-14 shrink-0 place-items-center rounded-full bg-brand text-lg font-semibold text-primary-foreground">AX</div>
         <div className="min-w-0 flex-1">
           <div className="font-semibold">Alex</div>
           <div className="text-xs text-muted-foreground">{copy.myInventory}</div>
         </div>
-        <div className="flex gap-2 text-center">
+        <div className="flex flex-wrap gap-2 text-center">
           <div className="rounded-2xl bg-muted px-4 py-2">
             <div className="text-lg font-semibold">{selling.length}</div>
             <div className="text-[10px] text-muted-foreground">{copy.inSale}</div>
@@ -82,6 +84,7 @@ export function ProfileView({
           <Package className="size-4 text-primary" /> {copy.myInventory}
         </h2>
         <div className="space-y-2">
+          {selling.length === 0 && <p className="text-sm text-muted-foreground">{copy.inventoryEmpty}</p>}
           {selling.map((p) => (
             <Row key={p.id} p={p} />
           ))}

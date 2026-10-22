@@ -213,7 +213,7 @@ export function Onboarding({ onDone }: { onDone: (p: Profile) => void }) {
                   hidden
                   onChange={(e) => {
                     const files = Array.from(e.target.files ?? []).slice(0, 4 - photos.length);
-                    setPhotos((p) => [...p, ...files.map((f) => URL.createObjectURL(f))]);
+                    files.forEach((f) => { const reader = new FileReader(); reader.onload = () => { const src = reader.result; if (typeof src === "string") setPhotos((p) => [...p, src].slice(0, 4)); }; reader.readAsDataURL(f); });
                     e.target.value = "";
                   }}
                 />

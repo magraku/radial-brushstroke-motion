@@ -1,8 +1,9 @@
 import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis } from "recharts";
-import { ArrowRight, ShieldAlert, TrendingDown, TrendingUp } from "lucide-react";
-import { marketplaces, offersFor, platformsFor, series, type Niche } from "@/data/mock";
+import { ArrowRight, Heart, ShieldAlert, TrendingDown, TrendingUp } from "lucide-react";
+import { marketplaces, offersFor, platformsFor, series, type Niche, type Offer } from "@/data/mock";
+import { Button } from "@/components/ui/button";
 import { copy } from "@/lib/copy";
 import { ChartTip, eur } from "./charts";
 import { cn } from "@/lib/utils";
@@ -102,7 +103,7 @@ const SLOTS = [
   { x: 88, y: 66 },
 ];
 
-export function BuyHome({ niche, item }: { niche: Niche; item: string }) {
+export function BuyHome({ niche, item, favorites = [], onFavorite }: { niche: Niche; item: string; favorites?: string[]; onFavorite?: (offer: Offer) => void }) {
   const offers = useMemo(() => offersFor(item, niche), [item, niche]);
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="mx-auto flex h-full max-w-4xl flex-col py-4">
@@ -111,8 +112,9 @@ export function BuyHome({ niche, item }: { niche: Niche; item: string }) {
       </div>
       <div className="relative mx-auto mt-2 min-h-[420px] w-full flex-1">
         {offers.map((o, i) => {
-          const s = SLOTS[i]!;
-          const m = marketplaces[o.market]!;
+          const s = SLOTS[i];
+          const m = marketplaces[o.market];
+          if (!s || !m) return null;
           const tag = o.kind === "deal" ? copy.dealTag : o.kind === "scam" ? copy.scamTag : copy.fairTag;
           return (
             <motion.div
@@ -120,10 +122,10 @@ export function BuyHome({ niche, item }: { niche: Niche; item: string }) {
               initial={{ scale: 0, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ type: "spring", stiffness: 220, damping: 14, delay: 1.4 + i * 0.18 }}
-              className="absolute w-36 -translate-x-1/2 -translate-y-1/2 sm:w-44"
+              className="absolute w-32 -translate-x-1/2 -translate-y-1/2 sm:w-44"
               style={{ left: `${s.x}%`, top: `${s.y}%` }}
             >
-              <motion.div animate={{ y: [0, -4, 0] }} transition={{ repeat: Infinity, duration: 3 + i * 0.4, ease: "easeInOut" }} className={cn("surface rounded-2xl p-3", o.kind === "scam" && "border-destructive")}>
+              <div className={cn("surface rounded-2xl p-3", o.kind === "scam" && "border-destructive")}>
                 <div className="flex items-center gap-1.5 text-[11px] font-semibold">
                   <span className="size-2 rounded-full" style={{ background: m.color }} />
                   {m.name}
@@ -138,8 +140,11 @@ export function BuyHome({ niche, item }: { niche: Niche; item: string }) {
                     {o.delta > 0 ? "+" : ""}
                     {o.delta}% {copy.vsMarket}
                   </span>
+                  <Button variant="ghost" size="icon" className="ml-auto size-6 shrink-0 text-primary" aria-label={favorites.includes(o.id) ? copy.favRemove : copy.favAdd} onClick={() => onFavorite?.(o)}>
+                    <Heart className={cn("size-3.5", favorites.includes(o.id) && "fill-current")} />
+                  </Button>
                 </div>
-              </motion.div>
+              </div>
             </motion.div>
           );
         })}

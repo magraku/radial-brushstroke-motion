@@ -11,3 +11,6 @@
 
 - monami is a single-page app: all mock data lives in src/data/mock.ts and all UI copy (French) in src/lib/copy.ts, so both can be swapped for an API / translations later.
 - All UI components live in src/components/monami/; the brand wordmark (MonamiLogo) and mascot (Mascot) are inline SVGs converted from the user's VectorCraft file — keep them as source, not CDN assets.
+- The winding tree uses merged branch geometry and instanced branch-attached foliage with CSS palette tokens; this preserves its silhouette and keeps rendering economical.
+- Demo profile, inventory and saved offers are validated and restored after hydration through src/lib/demo-profile.ts; browser persistence is demo-only, not account authentication or cross-device storage.
+- Saved buying offers are separate from selling inventory so profile totals never count a watched purchase as an item for sale.
