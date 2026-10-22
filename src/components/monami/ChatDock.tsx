@@ -75,7 +75,8 @@ export function ChatDock({ messages, typing, onSend }: { messages: Msg[]; typing
           hidden
           onChange={(e) => {
             const f = e.target.files?.[0];
-            if (f) setPhoto(URL.createObjectURL(f));
+            if (f) { const reader = new FileReader(); reader.onload = () => { if (typeof reader.result === "string") setPhoto(reader.result); }; reader.readAsDataURL(f); }
+            e.target.value = "";
           }}
         />
         <button type="button" aria-label={copy.upload} onClick={() => fileRef.current?.click()} className="grid size-9 shrink-0 place-items-center rounded-full text-muted-foreground transition hover:bg-muted hover:text-primary">

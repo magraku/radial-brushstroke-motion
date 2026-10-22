@@ -9,7 +9,9 @@ import { Onboarding, type Profile } from "@/components/monami/Onboarding";
 import { SellHome, BuyHome } from "@/components/monami/HomeViews";
 import { ProfileView } from "@/components/monami/ProfileView";
 import { TreeBackground, type TreeStage } from "@/components/monami/tree3d/TreeBackground";
-import { agentReplies, alerts, analysis, products as seed, type Product } from "@/data/mock";
+import { agentReplies, alerts, analysis, niches, type Product, type Offer } from "@/data/mock";
+import { copy } from "@/lib/copy";
+import { DEMO_KEY, restoreDemo, chatRequest } from "@/lib/demo-profile";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -31,19 +33,38 @@ const TREE_BY_VIEW: Record<View, TreeStage> = {
   home: "full",
   inventory: "full",
   analysis: "fruit",
-  profile: "roots",
+  profile: "full",
 };
 
 function Index() {
   const [profile, setProfile] = useState<Profile>();
   const [view, setView] = useState<View>("home");
-  const [items, setItems] = useState<Product[]>(seed);
+  const [items, setItems] = useState<Product[]>([]);
+  const [savedOffers, setSavedOffers] = useState<Product[]>([]);
+  const [loaded, setLoaded] = useState(false);
+  const [returning, setReturning] = useState(false);
+  const [pending, setPending] = useState<"buy" | "sell">();
   const [favorites, setFavorites] = useState<string[]>([]);
   const [pulse, setPulse] = useState<string>();
   const [toast, setToast] = useState<(typeof alerts)[number]>();
   const [typing, setTyping] = useState(false);
   const [messages, setMessages] = useState<Msg[]>([]);
   const idRef = useRef(1);
+
+  useEffect(() => {
+    let saved;
+    try { saved = restoreDemo(localStorage.getItem(DEMO_KEY)); } catch { /* storage is optional for this demo */ }
+    if (saved) {
+      setProfile(saved.profile); setItems(saved.items); setFavorites(saved.favorites); setSavedOffers(saved.savedOffers);
+      setMessages([{ id: 0, role: "agent", text: copy.chatWelcome }]); setReturning(true);
+      idRef.current = saved.items.reduce((max, p) => Math.max(max, Number(p.id.replace("item-", "")) || 0), 0) + 1;
+    }
+    setLoaded(true);
+  }, []);
+  useEffect(() => {
+    if (!loaded || !profile) return;
+    try { localStorage.setItem(DEMO_KEY, JSON.stringify({ profile, items, savedOffers, favorites })); } catch { /* browser quota / private browsing */ }
+  }, [loaded, profile, items, savedOffers, favorites]);
 
   useEffect(() => {
     if (!profile) return;
@@ -69,6 +90,7 @@ function Index() {
 
   const onDone = (p: Profile) => {
     setProfile(p);
+    if (p.intent === "sell") addSellingItem(p);
     const text =
       p.intent === "sell"
         ? `Voilà comment se porte « ${p.item} » : eBay est ton meilleur pari pour le vendre vite.`
@@ -76,19 +98,41 @@ function Index() {
     setMessages([{ id: 0, role: "agent", text }]);
   };
 
+  const addSellingItem = (p: Profile) => {
+    const family = p.niche.id === "pokemon" ? "cards" : p.niche.id === "sneakers" ? "sneakers" : "electronics";
+    setItems((list) => [...list, { id: `item-${idRef.current++}`, name: p.item, image: p.photos[0] ?? "", family, market: "ebay", listedPrice: p.niche.study.median, marketPrice: p.niche.study.median, status: "listed" }]);
+  };
+
+  const onFavorite = (offer: Offer) => {
+    if (!profile) return;
+    const id = `${profile.niche.id}-${profile.item}-${offer.id}`;
+    setSavedOffers((list) => list.some((p) => p.id === id) ? list : [...list, { id, name: offer.title, image: "", family: profile.niche.id === "pokemon" ? "cards" : profile.niche.id === "sneakers" ? "sneakers" : "electronics", market: offer.market, listedPrice: offer.price, marketPrice: profile.niche.study.median, status: "listed" }]);
+    toggleFav(id);
+  };
+
   const onSend = (text: string, photo?: string) => {
+    if (!profile) return;
     setMessages((m) => [...m, { id: idRef.current++, role: "user", text, photo }]);
-    const t = text.toLowerCase();
-    if (photo || /vendre|ajouter|add|sell/.test(t)) {
-      reply(agentReplies.analysis, () => setView("analysis"));
-    } else if (/best|meilleur|vend le plus/.test(t)) {
+    const request = chatRequest(text);
+    const intent = photo ? "sell" : request.intent ?? pending;
+    if (intent) {
+      if (!photo && (!request.item || /^(ça|un produit|un objet)$/i.test(request.item))) {
+        setPending(intent); reply(intent === "sell" ? copy.chatSellAsk : copy.chatBuyAsk); return;
+      }
+      if (intent === "sell" && !photo) { setPending("sell"); setProfile({ ...profile, intent, item: request.item, photos: [] }); reply(copy.chatSellAsk); return; }
+      const item = photo && /ça|photo/i.test(request.item) ? profile.item : request.item;
+      const nicheId = /rtx|gpu|cpu|ryzen|geforce/i.test(item) ? "gpu" : /jordan|nike|sneaker|dunk/i.test(item) ? "sneakers" : /pokémon|pokemon|dracaufeu|pikachu|display 151/i.test(item) ? "pokemon" : profile.niche.id;
+      const p = { ...profile, niche: niches.find((n) => n.id === nicheId) ?? profile.niche, intent, item, photos: photo ? [photo] : [] };
+      setProfile(p); setPending(undefined);
+      if (intent === "sell") addSellingItem(p);
+      reply(intent === "sell" ? copy.chatSellReady(p.item) : copy.chatBuyReady(p.item), () => setView("home"));
+    } else if (/inventaire|profil|favoris/i.test(text)) {
+      setView("profile");
+    } else if (/best|meilleur|vend le plus/i.test(text)) {
       reply(agentReplies.bestSeller, () => setView("inventory"));
-    } else if (/plan|deal|affaire|arnaque/.test(t)) {
-      reply(agentReplies.deals, () => {
-        setToast(alerts[1]);
-        setTimeout(() => setToast(alerts[2]), 6500);
-      });
-    } else reply(agentReplies.fallback, () => setView("inventory"));
+    } else if (/plan|deal|affaire|arnaque/i.test(text)) {
+      setProfile({ ...profile, intent: "buy" }); reply(agentReplies.deals, () => setView("home"));
+    } else reply(copy.chatWelcome);
   };
 
   const confirm = () => {
@@ -102,12 +146,13 @@ function Index() {
     reply(agentReplies.added);
   };
 
+  if (!loaded) return <div className="relative h-dvh"><TreeBackground stage="full" /></div>;
   if (!profile) return <Onboarding onDone={onDone} />;
 
   return (
     <motion.div
       className="relative flex h-dvh flex-col overflow-hidden"
-      initial={{ scale: 1.25, filter: "blur(24px)", opacity: 0 }}
+      initial={returning ? false : { scale: 1.25, filter: "blur(24px)", opacity: 0 }}
       animate={{ scale: 1, filter: "blur(0px)", opacity: 1 }}
       transition={{ duration: 1.1, ease: [0.2, 0.8, 0.2, 1] }}
     >
@@ -120,14 +165,14 @@ function Index() {
               profile.intent === "sell" ? (
                 <SellHome key="home" niche={profile.niche} item={profile.item} photo={profile.photos[0]} />
               ) : (
-                <BuyHome key="home" niche={profile.niche} item={profile.item} />
+                <BuyHome key="home" niche={profile.niche} item={profile.item} favorites={savedOffers.filter((p) => favorites.includes(p.id) && p.name === profile.item).map((p) => p.id.split("-").at(-1) ?? "")} onFavorite={onFavorite} />
               )
             ) : view === "inventory" ? (
               <ProductGrid key="inv" items={items} pulseId={pulse} favorites={favorites} onToggleFav={toggleFav} />
             ) : view === "analysis" ? (
               <AnalysisView key="ana" onConfirm={confirm} onCancel={() => setView("inventory")} />
             ) : (
-              <ProfileView key="prof" items={items} favorites={favorites} onToggleFav={toggleFav} onBack={() => setView("inventory")} />
+              <ProfileView key="prof" items={items} savedOffers={savedOffers} favorites={favorites} onToggleFav={toggleFav} onBack={() => setView("home")} />
             )}
           </AnimatePresence>
         </div>

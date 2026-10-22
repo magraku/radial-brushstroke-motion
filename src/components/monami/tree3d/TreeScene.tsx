@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo, useRef } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
@@ -19,6 +19,11 @@ function rng(seed: number) {
 }
 
 type Tip = { p: THREE.Vector3; d: THREE.Vector3 };
+
+function palette() {
+  const css = getComputedStyle(document.documentElement);
+  return { silver: css.getPropertyValue("--tree-silver").trim(), leaf: css.getPropertyValue("--tree-leaf").trim(), light: css.getPropertyValue("--tree-leaf-light").trim(), fruit: css.getPropertyValue("--tree-fruit").trim(), stem: css.getPropertyValue("--tree-stem").trim() };
+}
 
 function tube(points: THREE.Vector3[], r0: number, r1: number, tubular: number, radial: number) {
   const curve = new THREE.CatmullRomCurve3(points);
@@ -74,7 +79,7 @@ function buildTree() {
     tips.push({ p: end, d: curve.getTangent(1) });
     if (bi === 0) return;
     // Pixar detail: little curling twigs sprouting along each branch
-    const n = big ? 4 : 2;
+    const n = big ? 7 : 4;
     for (let k = 0; k < n; k++) {
       const t = 0.35 + (k / n) * 0.6 + r() * 0.05;
       const from = curve.getPoint(t);
@@ -84,30 +89,56 @@ function buildTree() {
       const len = (big ? 1.3 : 0.8) * (0.7 + r() * 0.5);
       const p1 = from.clone().addScaledVector(d, len * 0.5);
       const p2 = p1.clone().addScaledVector(d.clone().add(new THREE.Vector3((r() - 0.5) * 0.6, 0.35, (r() - 0.5) * 0.6)).normalize(), len * 0.5);
-      geos.push(tube([from, p1, p2], b.r0 * 0.38, 0.025, 16, 8));
+      geos.push(tube([from, p1, p2], b.r0 * 0.38, 0.009, 20, 8));
       tips.push({ p: p2, d });
+      const twig = new THREE.CatmullRomCurve3([from, p1, p2]);
+      for (let j = 1; j <= 5; j++) {
+        const anchor = twig.getPoint(j / 6);
+        const axis = new THREE.Vector3(j % 2 ? -.6 : .6, .25, (r()-.5)*.8);
+        const leafBase = anchor.clone().addScaledVector(axis, .2);
+        geos.push(tube([anchor, leafBase], .012, .004, 6, 5));
+        tips.push({ p: leafBase, d: axis.normalize() });
+      }
     }
   });
 
   // keep per-tube smooth normals (recomputing after merge would facet the seams)
-  const bark = mergeGeometries(geos, false)!;
+  const bark = mergeGeometries(geos, false);
+  geos.forEach((g) => g.dispose());
+  if (!bark) throw new Error("Tree geometry could not be merged");
   return { bark, tips };
 }
 
 function leafGeometry() {
-  const s = new THREE.Shape();
-  s.moveTo(0, 0);
-  s.bezierCurveTo(0.13, 0.08, 0.15, 0.3, 0, 0.46);
-  s.bezierCurveTo(-0.15, 0.3, -0.13, 0.08, 0, 0);
-  const g = new THREE.ShapeGeometry(s, 8);
-  // cup the leaf slightly so light rolls across it
-  const pos = g.attributes["position"] as THREE.BufferAttribute;
-  for (let i = 0; i < pos.count; i++) {
-    const x = pos.getX(i), y = pos.getY(i);
-    pos.setZ(i, x * x * 2.2 - y * y * 0.35);
+  const vertices: number[] = [], uvs: number[] = [], indices: number[] = [];
+  const rows = 10, cols = 4;
+  for (let y = 0; y <= rows; y++) {
+    const t = y / rows;
+    const width = Math.pow(Math.sin(Math.PI * t), .85) * .18;
+    for (let x = 0; x <= cols; x++) {
+      const across = x / cols * 2 - 1;
+      vertices.push(across * width, t * .64, Math.sin(t*Math.PI)*.07 - Math.abs(across)*.07 + Math.sin(t*12)*Math.abs(across)*.008);
+      uvs.push(x / cols, t);
+      if (y < rows && x < cols) { const i = y * (cols+1)+x; indices.push(i,i+1,i+cols+1,i+1,i+cols+2,i+cols+1); }
+    }
   }
-  g.computeVertexNormals();
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.Float32BufferAttribute(vertices,3));
+  g.setAttribute("uv", new THREE.Float32BufferAttribute(uvs,2));
+  g.setIndex(indices); g.computeVertexNormals();
   return g;
+}
+
+function veinTexture() {
+  const canvas = document.createElement("canvas"); canvas.width = 128; canvas.height = 256;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return undefined;
+  ctx.fillStyle = "#808080"; ctx.fillRect(0,0,128,256);
+  ctx.strokeStyle = "#c8c8c8"; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(64,256); ctx.lineTo(64,0); ctx.stroke();
+  ctx.lineWidth = 1;
+  for (let y=25; y<240; y+=25) { ctx.beginPath(); ctx.moveTo(64,y+28); ctx.lineTo(8,y); ctx.moveTo(64,y+28);ctx.lineTo(120,y);ctx.stroke(); }
+  return new THREE.CanvasTexture(canvas);
 }
 
 function useGrowth(target: boolean) {
@@ -158,27 +189,30 @@ export function TreeScene({ bloom = "none" }: { bloom?: Bloom }) {
     const leafGeo = leafGeometry();
     const leafM: THREE.Matrix4[] = [];
     const leafC: THREE.Color[] = [];
-    const shades = ["#5b0015", "#741026", "#8c1d33", "#4a0011"].map((c) => new THREE.Color(c));
-    tips.forEach((t) => {
-      for (let k = 0; k < 14; k++) {
-        const p = t.p.clone().add(new THREE.Vector3((r() - 0.5) * 1.5, (r() - 0.3) * 1.1, (r() - 0.5) * 1.5));
-        const q = new THREE.Quaternion().setFromEuler(new THREE.Euler(r() * Math.PI, r() * Math.PI * 2, r() * Math.PI));
-        const s = 0.8 + r() * 0.6;
-        leafM.push(new THREE.Matrix4().compose(p, q, new THREE.Vector3(s, s, s)));
-        leafC.push(shades[Math.floor(r() * shades.length)]!.clone());
-      }
-    });
-
-    const fruitM: THREE.Matrix4[] = [];
-    const stemM: THREE.Matrix4[] = [];
+    const colors = palette();
+    const shades = [colors.leaf, colors.light].map((c) => new THREE.Color(c));
+    const fruitM: THREE.Matrix4[] = [], stemM: THREE.Matrix4[] = [];
+    const stemGeo = new THREE.CylinderGeometry(.009,.013,1,6);
     tips.forEach((t, i) => {
-      if (i % 2) return;
+      // Leaves start exactly at a petiole, rather than scattered in a cloud.
       for (let k = 0; k < 2; k++) {
-        const anchor = t.p.clone().add(new THREE.Vector3((r() - 0.5) * 0.8, -0.1 - r() * 0.3, (r() - 0.5) * 0.8));
-        const s = 0.75 + r() * 0.4;
-        const fruit = anchor.clone().add(new THREE.Vector3(0, -0.32, 0));
-        fruitM.push(new THREE.Matrix4().compose(fruit, new THREE.Quaternion(), new THREE.Vector3(s, s * 0.92, s)));
-        stemM.push(new THREE.Matrix4().compose(anchor.clone().add(new THREE.Vector3(0, -0.12, 0)), new THREE.Quaternion(), new THREE.Vector3(1, 1, 1)));
+        const d = t.d.clone().add(new THREE.Vector3(k ? .4 : -.4,.25,(r()-.5)*.7)).normalize();
+        const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0), d);
+        q.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),(r()-.5)*1.2));
+        const size = .8 + r()*.55;
+        leafM.push(new THREE.Matrix4().compose(t.p,q,new THREE.Vector3(size,size,size)));
+        leafC.push((shades[i % shades.length] ?? new THREE.Color(colors.leaf)).clone());
+      }
+      if (i % 3 !== 0) return;
+      // Three berries share a twig attachment, like the supplied reference.
+      for (let k=0; k<3; k++) {
+        const fruit = t.p.clone().add(new THREE.Vector3((k-1)*.18,-.18-r()*.14,(r()-.5)*.16));
+        const delta = fruit.clone().sub(t.p), length = delta.length();
+        const mid = t.p.clone().add(fruit).multiplyScalar(.5);
+        const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),delta.normalize());
+        stemM.push(new THREE.Matrix4().compose(mid,q,new THREE.Vector3(1,length,1)));
+        const size = .75+r()*.35;
+        fruitM.push(new THREE.Matrix4().compose(fruit,new THREE.Quaternion(),new THREE.Vector3(size,size*.94,size)));
       }
     });
 
@@ -189,27 +223,28 @@ export function TreeScene({ bloom = "none" }: { bloom?: Bloom }) {
       leafC,
       fruitM,
       stemM,
-      fruitGeo: new THREE.SphereGeometry(0.15, 32, 24),
-      stemGeo: new THREE.CylinderGeometry(0.01, 0.015, 0.26, 6),
-      leafMat: new THREE.MeshStandardMaterial({ color: "#ffffff", roughness: 0.5, side: THREE.DoubleSide, emissive: "#3a0010", emissiveIntensity: 0.35 }),
-      fruitMat: new THREE.MeshPhysicalMaterial({ color: "#7a0a22", roughness: 0.28, clearcoat: 1, clearcoatRoughness: 0.15, sheen: 0.4 }),
-      stemMat: new THREE.MeshStandardMaterial({ color: "#4a0a14", roughness: 0.7 }),
+      fruitGeo: new THREE.SphereGeometry(0.15, 14, 10),
+      stemGeo,
+      colors,
+      veins: veinTexture(),
+      leafMat: new THREE.MeshPhysicalMaterial({ roughness: .42, side: THREE.DoubleSide, clearcoat: .35, sheen: .3 }),
+      fruitMat: new THREE.MeshPhysicalMaterial({ color: colors.fruit, roughness: 0.2, clearcoat: 1, clearcoatRoughness: 0.15, sheen: 0.4 }),
+      stemMat: new THREE.MeshStandardMaterial({ color: colors.stem, roughness: 0.7 }),
     };
   }, []);
 
-  const leaves = bloom === "leaves" || bloom === "both";
+  useEffect(() => {
+    data.leafMat.bumpMap = data.veins ?? null; data.leafMat.bumpScale = .025; data.leafMat.needsUpdate = true;
+    return () => { data.bark.dispose(); data.leafGeo.dispose(); data.fruitGeo.dispose(); data.stemGeo.dispose(); data.leafMat.dispose(); data.fruitMat.dispose(); data.stemMat.dispose(); data.veins?.dispose(); };
+  }, [data]);
+  const leaves = bloom !== "none";
   const fruits = bloom === "fruits" || bloom === "both";
 
   return (
     <group>
-      {/* soft ground disc */}
-      <mesh rotation-x={-Math.PI / 2} position-y={-0.32}>
-        <circleGeometry args={[6, 64]} />
-        <meshStandardMaterial color="#9fc1ec" roughness={1} transparent opacity={0.6} />
-      </mesh>
 
       <mesh geometry={data.bark}>
-        <meshPhysicalMaterial color="#d4d8de" metalness={0.75} roughness={0.32} clearcoat={0.6} clearcoatRoughness={0.25} />
+        <meshPhysicalMaterial color={data.colors.silver} metalness={0.8} roughness={0.26} clearcoat={0.6} clearcoatRoughness={0.25} />
       </mesh>
 
       <Instanced geometry={data.leafGeo} material={data.leafMat} matrices={data.leafM} colors={data.leafC} visible={leaves} />

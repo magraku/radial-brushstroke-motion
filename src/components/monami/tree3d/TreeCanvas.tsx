@@ -24,11 +24,13 @@ const STAGES: Record<TreeStage, { pos: [number, number, number]; look: [number, 
 
 function CameraRig({ stage }: { stage: TreeStage }) {
   const lookTarget = useRef(new THREE.Vector3(...STAGES[stage].look));
-  useFrame(({ camera, clock }, delta) => {
+  useFrame(({ camera, clock, size }, delta) => {
     const s = STAGES[stage];
     const t = 1 - Math.exp(-2.2 * Math.min(delta, 0.05));
-    const sway = Math.sin(clock.elapsedTime * 0.25) * 0.4;
-    camera.position.lerp(new THREE.Vector3(s.pos[0] + sway, s.pos[1], s.pos[2]), t);
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const sway = reduced ? 0 : Math.sin(clock.elapsedTime * 0.25) * 0.18;
+    const distance = stage === "full" ? Math.max(22, 18 / (size.width / size.height)) : s.pos[2];
+    camera.position.lerp(new THREE.Vector3(s.pos[0] + sway, s.pos[1], distance), t);
     lookTarget.current.lerp(new THREE.Vector3(...s.look), t);
     camera.lookAt(lookTarget.current);
   });

@@ -76,7 +76,17 @@
  */
 :root {
   --radius: 1.25rem;
-  --background: oklch(0.74 0.085 255); /* Cool Horizon #80AEE8 — page sky; Ivory Mist is for cards/chat */
+  --background: #80AEE8;
+  --tree-silver: #d4d8de;
+  --tree-leaf: #5b0015;
+  --tree-leaf-light: #861c39;
+  --tree-fruit: #ed1830;
+  --tree-stem: #74565f;
+  --metal-bright: #f4f8ff;
+  --metal-mid: #c4d0df;
+  --metal-dark: #526982;
+  --mascot-metal: linear-gradient(115deg, #28000c 0%, #5b0015 22%, #e299ad 36%, #7d1635 45%, #32000e 60%, #ab516e 75%, #5b0015 100%);
+  --mascot-outline: #f7f2e0;
   --foreground: oklch(0.28 0.03 40);
   --card: oklch(0.985 0.015 95);
   --card-foreground: oklch(0.28 0.03 40);
@@ -136,6 +146,13 @@
 @keyframes pulsering { 0% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--accent) 60%, transparent) } 100% { box-shadow: 0 0 0 18px transparent } }
 .mascot-eye { transform-box: fill-box; transform-origin: center; animation: mascotblink 4.2s ease-in-out infinite; }
 @keyframes mascotblink { 0%, 91%, 100% { transform: scaleY(1) } 94% { transform: scaleY(0.12) } }
+
+.cube-background { position: absolute; inset: 0; overflow: hidden; pointer-events: none; background: var(--background); }
+.cube-background img { width: 100%; height: 100%; object-fit: cover; opacity: .24; }
+.mascot-metal { fill: url(#mascot-metal-fill); stroke: var(--mascot-outline); stroke-width: .45; filter: drop-shadow(0 2px 1px var(--tree-leaf)); }
+@media (prefers-reduced-motion: reduce) {
+  .mascot-eye, .mascot-float { animation: none; }
+}
 
 @layer base {
   * {
