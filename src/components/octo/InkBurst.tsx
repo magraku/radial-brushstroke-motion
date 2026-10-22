@@ -28,10 +28,11 @@ export function InkBurst({
   return (
     <svg viewBox="-50 -50 100 100" className={cn(animate && "ink-burst-spin", className)} aria-hidden>
       {list.map((st, i) => {
-        const x1 = Math.cos(st.a) * st.inner;
-        const y1 = Math.sin(st.a) * st.inner;
-        const x2 = Math.cos(st.a) * st.outer;
-        const y2 = Math.sin(st.a) * st.outer;
+        const R = (n: number) => Math.round(n * 100) / 100;
+        const x1 = R(Math.cos(st.a) * st.inner);
+        const y1 = R(Math.sin(st.a) * st.inner);
+        const x2 = R(Math.cos(st.a) * st.outer);
+        const y2 = R(Math.sin(st.a) * st.outer);
         return (
           <line
             key={i}
@@ -40,8 +41,8 @@ export function InkBurst({
             x2={x2}
             y2={y2}
             stroke="currentColor"
-            strokeOpacity={st.o}
-            strokeWidth={st.w}
+            strokeOpacity={R(st.o)}
+            strokeWidth={R(st.w)}
             strokeLinecap="round"
           />
         );
