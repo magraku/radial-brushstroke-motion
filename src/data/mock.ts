@@ -244,7 +244,7 @@ const NICHE_PLATFORMS: Record<string, string[]> = {
   custom: ["vinted", "leboncoin"],
 };
 export function platformsFor(niche: Niche): { id: string; name: string; color: string; fit: number }[] {
-  const ids = ["ebay", ...(NICHE_PLATFORMS[niche.id] ?? NICHE_PLATFORMS.custom!)];
+  const ids = ["ebay", ...(NICHE_PLATFORMS[niche.id] ?? NICHE_PLATFORMS["custom"]!)];
   return ids.map((id, i) => ({ id, ...marketplaces[id]!, fit: [96, 84, 71][i] ?? 60 }));
 }
 
@@ -252,7 +252,7 @@ export type Offer = { id: string; title: string; price: number; market: string; 
 export function offersFor(query: string, niche: Niche): Offer[] {
   const r = rng(hash(query.toLowerCase() + niche.id) + 3);
   const base = niche.study.median;
-  const markets = ["ebay", ...(NICHE_PLATFORMS[niche.id] ?? NICHE_PLATFORMS.custom!), "leboncoin"];
+  const markets = ["ebay", ...(NICHE_PLATFORMS[niche.id] ?? NICHE_PLATFORMS["custom"]!), "leboncoin"];
   const kinds: Offer["kind"][] = ["deal", "fair", "deal", "scam", "fair"];
   return kinds.map((kind, i) => {
     const delta = kind === "deal" ? -Math.round(12 + r() * 15) : kind === "scam" ? -Math.round(55 + r() * 15) : Math.round(r() * 8 - 3);
