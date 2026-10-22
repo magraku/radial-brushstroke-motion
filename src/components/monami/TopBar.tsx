@@ -31,7 +31,7 @@ export function AlertCard({ a, onClose }: { a: (typeof alerts)[number]; onClose?
   );
 }
 
-export function TopBar() {
+export function TopBar({ onProfile }: { onProfile?: () => void }) {
   const [open, setOpen] = useState(false);
   return (
     <header className="relative z-30 flex h-14 items-center gap-3 px-4 sm:px-6">
@@ -53,7 +53,9 @@ export function TopBar() {
             )}
           </AnimatePresence>
         </div>
-        <div className="grid size-9 place-items-center rounded-full bg-brand text-sm font-semibold text-primary-foreground">AX</div>
+        <button onClick={onProfile} aria-label={copy.profile} className="grid size-9 place-items-center rounded-full bg-brand text-sm font-semibold text-primary-foreground transition hover:scale-105">
+          AX
+        </button>
       </div>
     </header>
   );

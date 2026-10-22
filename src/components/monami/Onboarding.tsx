@@ -1,16 +1,24 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowRight, Check, Search, ShoppingBag, Clock, TrendingUp } from "lucide-react";
+import { ArrowRight, Check, TrendingUp } from "lucide-react";
 import { customNiche, marketplaces, niches, type Niche } from "@/data/mock";
 import { copy } from "@/lib/copy";
 import { Mascot } from "./Mascot";
 import { MonamiLogo } from "./MonamiLogo";
+import { TreeCamera, type TreeStage } from "./TreeCamera";
 import { eur } from "./charts";
 import { cn } from "@/lib/utils";
 
 export type Profile = { hasAccount: boolean; niche: Niche; intent: "buy" | "sell" };
 
-type Step = "account" | "niche" | "study" | "intent";
+type Step = "account" | "niche" | "intent" | "study";
+
+const TREE_BY_STEP: Record<Step, TreeStage> = {
+  account: "roots",
+  niche: "trunk",
+  intent: "branch",
+  study: "canopy",
+};
 
 function Bubble({ children }: { children: React.ReactNode }) {
   return (
@@ -40,6 +48,7 @@ export function Onboarding({ onDone }: { onDone: (p: Profile) => void }) {
   const [step, setStep] = useState<Step>("account");
   const [hasAccount, setHasAccount] = useState(false);
   const [niche, setNiche] = useState<Niche>();
+  const [intent, setIntent] = useState<"buy" | "sell">();
   const [custom, setCustom] = useState("");
   const [customMode, setCustomMode] = useState(false);
   const [analyzing, setAnalyzing] = useState(true);
@@ -47,24 +56,23 @@ export function Onboarding({ onDone }: { onDone: (p: Profile) => void }) {
   useEffect(() => {
     if (step !== "study") return;
     setAnalyzing(true);
-    const t = setTimeout(() => setAnalyzing(false), 1800);
+    const t = setTimeout(() => setAnalyzing(false), 1600);
     return () => clearTimeout(t);
   }, [step]);
 
   const pickNiche = (n: Niche) => {
     setNiche(n);
-    setStep("study");
+    setStep("intent");
   };
 
-  const steps: Step[] = ["account", "niche", "study", "intent"];
+  const steps: Step[] = ["account", "niche", "intent", "study"];
   const stepIdx = steps.indexOf(step);
 
   return (
     <div className="relative flex h-dvh flex-col items-center overflow-hidden px-4">
-      <div className="pointer-events-none absolute -right-32 -top-32 size-96 rounded-full bg-primary/[0.05] blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-40 -left-32 size-96 rounded-full bg-accent/[0.08] blur-3xl" />
+      <TreeCamera stage={TREE_BY_STEP[step]} />
 
-      <header className="flex h-16 w-full max-w-2xl items-center">
+      <header className="relative z-10 flex h-16 w-full max-w-2xl items-center">
         <MonamiLogo className="h-5 text-ink" />
         <div className="ml-auto flex gap-1.5">
           {steps.map((s, i) => (
@@ -73,7 +81,7 @@ export function Onboarding({ onDone }: { onDone: (p: Profile) => void }) {
         </div>
       </header>
 
-      <div className="flex w-full max-w-2xl flex-1 flex-col justify-center gap-8 pb-16">
+      <div className="relative z-10 flex w-full max-w-2xl flex-1 flex-col justify-center gap-8 pb-16">
         <AnimatePresence mode="wait">
           {step === "account" && (
             <motion.div key="account" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, y: -24 }} className="space-y-8">
@@ -156,7 +164,40 @@ export function Onboarding({ onDone }: { onDone: (p: Profile) => void }) {
             </motion.div>
           )}
 
-          {step === "study" && niche && (
+          {step === "intent" && niche && (
+            <motion.div key="intent" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, y: -24 }} className="space-y-8">
+              <MascotRow>{copy.obIntent}</MascotRow>
+              <div className="grid gap-3 pl-20 sm:grid-cols-2 sm:pl-28">
+                {(
+                  [
+                    { v: "sell" as const, label: copy.obSell, sub: copy.obSellSub, emoji: "📸" },
+                    { v: "buy" as const, label: copy.obBuy, sub: copy.obBuySub, emoji: "🔍" },
+                  ] as const
+                ).map((o, i) => (
+                  <motion.button
+                    key={o.v}
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 + i * 0.1 }}
+                    onClick={() => {
+                      setIntent(o.v);
+                      setStep("study");
+                    }}
+                    className="surface group rounded-3xl p-5 text-left transition hover:-translate-y-1 hover:border-primary"
+                  >
+                    <span className="text-3xl">{o.emoji}</span>
+                    <div className="mt-3 font-semibold">{o.label}</div>
+                    <div className="mt-1 text-xs text-muted-foreground">{o.sub}</div>
+                    <div className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-primary">
+                      {copy.obContinue} <ArrowRight className="size-3.5 transition group-hover:translate-x-0.5" />
+                    </div>
+                  </motion.button>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
+          {step === "study" && niche && intent && (
             <motion.div key="study" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, y: -24 }} className="space-y-8">
               <MascotRow>
                 {analyzing ? (
@@ -189,66 +230,32 @@ export function Onboarding({ onDone }: { onDone: (p: Profile) => void }) {
                         <div className="text-[10px] text-muted-foreground">{copy.demandScore} /100</div>
                       </div>
                     </div>
-                    <div className="grid grid-cols-3 gap-2">
-                      {[
-                        { icon: Search, label: copy.searches, value: niche.study.searches.toLocaleString("fr-FR") },
-                        { icon: ShoppingBag, label: copy.salesPeriod, value: String(niche.study.sales) },
-                        { icon: Clock, label: copy.sellThrough, value: `~${niche.study.sellThroughDays} ${copy.days}` },
-                      ].map((k, i) => (
-                        <motion.div key={k.label} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 + i * 0.08 }} className="rounded-2xl bg-muted p-3">
-                          <k.icon className="size-4 text-primary" />
-                          <div className="mt-1.5 text-sm font-semibold">{k.value}</div>
-                          <div className="text-[10px] leading-tight text-muted-foreground">{k.label}</div>
-                        </motion.div>
-                      ))}
-                    </div>
-                    <div className="flex items-center justify-between rounded-2xl bg-secondary px-4 py-2.5 text-sm">
-                      <span className="text-muted-foreground">{copy.obBestPlatform}</span>
-                      <span className="inline-flex items-center gap-2 font-semibold">
-                        <span className="size-2.5 rounded-full" style={{ background: marketplaces[niche.study.bestPlatform]?.color }} />
-                        {marketplaces[niche.study.bestPlatform]?.name}
+
+                    <p className="text-sm text-muted-foreground">{niche.study.note}</p>
+
+                    <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-muted-foreground">
+                      <span>
+                        {copy.median} : <b className="text-foreground">{eur(niche.study.median)}</b>
+                      </span>
+                      <span className="inline-flex items-center gap-1.5">
+                        {copy.obBestPlatform} :
+                        <b className="inline-flex items-center gap-1.5 text-foreground">
+                          <span className="size-2.5 rounded-full" style={{ background: marketplaces[niche.study.bestPlatform]?.color }} />
+                          {marketplaces[niche.study.bestPlatform]?.name}
+                        </b>
                       </span>
                     </div>
-                    <p className="text-sm text-muted-foreground">{niche.study.note}</p>
-                    <div className="text-xs text-muted-foreground">
-                      {copy.median} : <b className="text-foreground">{eur(niche.study.median)}</b>
-                    </div>
-                    <button onClick={() => setStep("intent")} className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary py-2.5 text-sm font-semibold text-primary-foreground shadow-md transition hover:brightness-110">
-                      {copy.obContinue} <ArrowRight className="size-4" />
+
+                    <p className="rounded-2xl bg-secondary px-4 py-2.5 text-sm text-secondary-foreground">
+                      {intent === "sell" ? copy.obStudySell : copy.obStudyBuy}
+                    </p>
+
+                    <button onClick={() => onDone({ hasAccount, niche, intent })} className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary py-2.5 text-sm font-semibold text-primary-foreground shadow-md transition hover:brightness-110">
+                      {copy.obStart} <Check className="size-4" />
                     </button>
                   </motion.div>
                 )}
               </AnimatePresence>
-            </motion.div>
-          )}
-
-          {step === "intent" && niche && (
-            <motion.div key="intent" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, y: -24 }} className="space-y-8">
-              <MascotRow>{copy.obIntent}</MascotRow>
-              <div className="grid gap-3 pl-20 sm:grid-cols-2 sm:pl-28">
-                {(
-                  [
-                    { v: "sell" as const, label: copy.obSell, sub: copy.obSellSub, emoji: "📸" },
-                    { v: "buy" as const, label: copy.obBuy, sub: copy.obBuySub, emoji: "🔍" },
-                  ] as const
-                ).map((o, i) => (
-                  <motion.button
-                    key={o.v}
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 + i * 0.1 }}
-                    onClick={() => onDone({ hasAccount, niche, intent: o.v })}
-                    className="surface group rounded-3xl p-5 text-left transition hover:-translate-y-1 hover:border-primary"
-                  >
-                    <span className="text-3xl">{o.emoji}</span>
-                    <div className="mt-3 font-semibold">{o.label}</div>
-                    <div className="mt-1 text-xs text-muted-foreground">{o.sub}</div>
-                    <div className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-primary">
-                      {copy.obStart} <Check className="size-3.5 transition group-hover:scale-125" />
-                    </div>
-                  </motion.button>
-                ))}
-              </div>
             </motion.div>
           )}
         </AnimatePresence>
