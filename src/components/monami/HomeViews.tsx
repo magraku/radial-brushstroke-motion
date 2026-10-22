@@ -93,13 +93,13 @@ export function SellHome({ niche, item, photo }: { niche: Niche; item: string; p
   );
 }
 
-/* Buy: an animated tree whose branches grow out and carry each offer like a fruit. */
+/* Buy: offers pop out like fruits around the 3D tree canopy. */
 const SLOTS = [
-  { x: 14, y: 30, path: "M50 100 C50 70, 40 55, 20 38" },
-  { x: 86, y: 30, path: "M50 100 C50 70, 60 55, 80 38" },
-  { x: 50, y: 6, path: "M50 100 C50 60, 52 35, 50 14" },
-  { x: 12, y: 66, path: "M50 100 C46 85, 30 78, 18 70" },
-  { x: 88, y: 66, path: "M50 100 C54 85, 70 78, 82 70" },
+  { x: 14, y: 30 },
+  { x: 86, y: 30 },
+  { x: 50, y: 6 },
+  { x: 12, y: 66 },
+  { x: 88, y: 66 },
 ];
 
 export function BuyHome({ niche, item }: { niche: Niche; item: string }) {
@@ -110,23 +110,6 @@ export function BuyHome({ niche, item }: { niche: Niche; item: string }) {
         {copy.buyTitle} · <span className="text-primary">{item}</span>
       </div>
       <div className="relative mx-auto mt-2 min-h-[420px] w-full flex-1">
-        <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 size-full">
-          <motion.path d="M50 100 L50 78" stroke="var(--card)" strokeLinecap="round" fill="none" strokeWidth={1.6} initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.6, delay: 0.4 }} />
-          {SLOTS.map((s, i) => (
-            <motion.path
-              key={i}
-              d={s.path}
-              stroke="var(--card)"
-              fill="none"
-              strokeLinecap="round"
-             
-              strokeWidth={0.7}
-              initial={{ pathLength: 0 }}
-              animate={{ pathLength: 1 }}
-              transition={{ duration: 1, delay: 0.7 + i * 0.18, ease: "easeOut" }}
-            />
-          ))}
-        </svg>
         {offers.map((o, i) => {
           const s = SLOTS[i]!;
           const m = marketplaces[o.market]!;
