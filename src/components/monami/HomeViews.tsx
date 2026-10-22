@@ -1,13 +1,11 @@
 import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis } from "recharts";
-import { ArrowRight, ShieldAlert, Sparkles as _unused, TrendingDown, TrendingUp } from "lucide-react";
+import { ArrowRight, ShieldAlert, TrendingDown, TrendingUp } from "lucide-react";
 import { marketplaces, offersFor, platformsFor, series, type Niche } from "@/data/mock";
 import { copy } from "@/lib/copy";
 import { ChartTip, eur } from "./charts";
 import { cn } from "@/lib/utils";
-
-void _unused;
 
 export function SellHome({ niche, item, photo }: { niche: Niche; item: string; photo?: string | undefined }) {
   const data = useMemo(() => series(item + niche.id, niche.study.median, "6M", 0.12), [item, niche]);
@@ -113,7 +111,7 @@ export function BuyHome({ niche, item }: { niche: Niche; item: string }) {
       </div>
       <div className="relative mx-auto mt-2 min-h-[420px] w-full flex-1">
         <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 size-full">
-          <motion.path d="M50 100 L50 78" stroke="var(--card)" strokeWidth={1.6} strokeLinecap="round" fill="none" vectorEffect="non-scaling-stroke" style={{ strokeWidth: 10 }} initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.6, delay: 0.4 }} />
+          <motion.path d="M50 100 L50 78" stroke="var(--card)" strokeLinecap="round" fill="none" vectorEffect="non-scaling-stroke" style={{ strokeWidth: 10 }} initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.6, delay: 0.4 }} />
           {SLOTS.map((s, i) => (
             <motion.path
               key={i}
