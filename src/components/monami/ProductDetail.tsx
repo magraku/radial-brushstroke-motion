@@ -43,7 +43,7 @@ export function Spark({ p }: { p: Product }) {
   );
 }
 
-export function ProductDetail({ product, onBack, fav, onToggleFav }: { product: Product; onBack: () => void; fav?: boolean; onToggleFav?: () => void }) {
+export function ProductDetail({ product, onBack, fav, onToggleFav }: { product: Product; onBack: () => void; fav?: boolean | undefined; onToggleFav?: (() => void) | undefined }) {
   const [range, setRange] = useState<Range>("6M");
   const prod = series(product.id, product.marketPrice, range).map((d) => ({ ...d, band: [d.min, d.max] }));
   const hint = priceHint(product);
