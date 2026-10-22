@@ -79,7 +79,7 @@ function buildTree() {
     tips.push({ p: end, d: curve.getTangent(1) });
     if (bi === 0) return;
     // Pixar detail: little curling twigs sprouting along each branch
-    const n = big ? 9 : 5;
+    const n = big ? 7 : 4;
     for (let k = 0; k < n; k++) {
       const t = 0.35 + (k / n) * 0.6 + r() * 0.05;
       const from = curve.getPoint(t);
@@ -111,7 +111,7 @@ function buildTree() {
 
 function leafGeometry() {
   const vertices: number[] = [], uvs: number[] = [], indices: number[] = [];
-  const rows = 14, cols = 6;
+  const rows = 10, cols = 4;
   for (let y = 0; y <= rows; y++) {
     const t = y / rows;
     const width = Math.pow(Math.sin(Math.PI * t), .85) * .18;
@@ -223,7 +223,7 @@ export function TreeScene({ bloom = "none" }: { bloom?: Bloom }) {
       leafC,
       fruitM,
       stemM,
-      fruitGeo: new THREE.SphereGeometry(0.15, 32, 24),
+      fruitGeo: new THREE.SphereGeometry(0.15, 14, 10),
       stemGeo,
       colors,
       veins: veinTexture(),
