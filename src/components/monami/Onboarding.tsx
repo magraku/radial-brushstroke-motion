@@ -1,48 +1,41 @@
-import { useEffect, useState } from "react";
+import { useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowRight, Check, TrendingUp } from "lucide-react";
-import { customNiche, marketplaces, niches, type Niche } from "@/data/mock";
+import { ArrowRight, ImagePlus, X } from "lucide-react";
+import { customNiche, niches, type Niche } from "@/data/mock";
 import { copy } from "@/lib/copy";
 import { Mascot } from "./Mascot";
 import { MonamiLogo } from "./MonamiLogo";
-import { TreeBackground, type TreeStage } from "./tree3d/TreeBackground";
-import { eur } from "./charts";
+import { TreeBackground, type TreeStage, type Bloom } from "./tree3d/TreeBackground";
 import { cn } from "@/lib/utils";
 
-export type Profile = { hasAccount: boolean; niche: Niche; intent: "buy" | "sell" };
+export type Profile = { hasAccount: boolean; niche: Niche; intent: "buy" | "sell"; item: string; photos: string[] };
 
-type Step = "account" | "niche" | "intent" | "study";
+type Step = "account" | "niche" | "intent" | "detail" | "ready";
 
 const TREE_BY_STEP: Record<Step, TreeStage> = {
   account: "roots",
   niche: "trunk",
   intent: "branch",
-  study: "canopy",
+  detail: "canopy",
+  ready: "canopy",
 };
 
 function Bubble({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="relative rounded-3xl rounded-bl-md bg-card px-5 py-4 text-base font-medium shadow-sm sm:text-lg">
-      {children}
-    </div>
-  );
+  return <div className="relative rounded-3xl rounded-bl-md bg-card px-5 py-4 text-base font-medium shadow-sm sm:text-lg">{children}</div>;
 }
 
 function MascotRow({ children, big }: { children: React.ReactNode; big?: boolean }) {
   return (
     <div className="flex items-end gap-4">
       <Mascot float className={cn("shrink-0 text-ink", big ? "w-24 sm:w-28" : "w-16 sm:w-20")} />
-      <motion.div
-        key={String(big)}
-        initial={{ opacity: 0, y: 12, scale: 0.96 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ type: "spring", stiffness: 200, damping: 20 }}
-      >
+      <motion.div initial={{ opacity: 0, y: 12, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ type: "spring", stiffness: 200, damping: 20 }}>
         <Bubble>{children}</Bubble>
       </motion.div>
     </div>
   );
 }
+
+const fade = { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0, y: -24 } };
 
 export function Onboarding({ onDone }: { onDone: (p: Profile) => void }) {
   const [step, setStep] = useState<Step>("account");
@@ -51,32 +44,42 @@ export function Onboarding({ onDone }: { onDone: (p: Profile) => void }) {
   const [intent, setIntent] = useState<"buy" | "sell">();
   const [custom, setCustom] = useState("");
   const [customMode, setCustomMode] = useState(false);
-  const [analyzing, setAnalyzing] = useState(true);
+  const [photos, setPhotos] = useState<string[]>([]);
+  const [item, setItem] = useState("");
+  const [leaving, setLeaving] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (step !== "study") return;
-    setAnalyzing(true);
-    const t = setTimeout(() => setAnalyzing(false), 1600);
-    return () => clearTimeout(t);
-  }, [step]);
+  const steps: Step[] = ["account", "niche", "intent", "detail"];
+  const stepIdx = Math.min(steps.indexOf(step === "ready" ? "detail" : step), 3);
+  const bloom: Bloom = intent === "sell" ? "leaves" : intent === "buy" ? "fruits" : "none";
 
-  const pickNiche = (n: Niche) => {
-    setNiche(n);
-    setStep("intent");
+  const finish = () => {
+    if (!niche || !intent) return;
+    setStep("ready");
+    const p: Profile = { hasAccount, niche, intent, item: item.trim() || (intent === "sell" ? niche.name : item.trim()), photos };
+    setTimeout(() => setLeaving(true), 1300);
+    setTimeout(() => onDone(p), 2200);
   };
 
-  const steps: Step[] = ["account", "niche", "intent", "study"];
-  const stepIdx = steps.indexOf(step);
+  const suggestions: Record<string, string[]> = {
+    pokemon: ["Display 151", "Dracaufeu holo", "Booster Évolutions"],
+    gpu: ["RTX 3080", "Ryzen 7 5800X", "RX 6700 XT"],
+    sneakers: ["Jordan 1 Mid", "New Balance 550", "Dunk Low Panda"],
+  };
 
   return (
-    <div className="relative flex h-dvh flex-col items-center overflow-hidden px-4">
-      <TreeBackground stage={TREE_BY_STEP[step]} />
+    <motion.div
+      className="relative flex h-dvh flex-col items-center overflow-hidden px-4"
+      animate={leaving ? { scale: 1.6, filter: "blur(24px)", opacity: 0 } : { scale: 1, filter: "blur(0px)", opacity: 1 }}
+      transition={{ duration: 0.9, ease: [0.6, 0, 0.4, 1] }}
+    >
+      <TreeBackground stage={TREE_BY_STEP[step]} bloom={bloom} />
 
       <header className="relative z-10 flex h-16 w-full max-w-2xl items-center">
         <MonamiLogo className="h-5 text-ink" />
         <div className="ml-auto flex gap-1.5">
           {steps.map((s, i) => (
-            <span key={s} className={cn("h-1.5 rounded-full transition-all", i <= stepIdx ? "w-6 bg-primary" : "w-1.5 bg-border")} />
+            <span key={s} className={cn("h-1.5 rounded-full transition-all", i <= stepIdx ? "w-6 bg-primary" : "w-1.5 bg-card/70")} />
           ))}
         </div>
       </header>
@@ -84,7 +87,7 @@ export function Onboarding({ onDone }: { onDone: (p: Profile) => void }) {
       <div className="relative z-10 flex w-full max-w-2xl flex-1 flex-col justify-center gap-8 pb-16">
         <AnimatePresence mode="wait">
           {step === "account" && (
-            <motion.div key="account" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, y: -24 }} className="space-y-8">
+            <motion.div key="account" {...fade} className="space-y-8">
               <MascotRow big>
                 <div>
                   {copy.obHello}
@@ -115,7 +118,7 @@ export function Onboarding({ onDone }: { onDone: (p: Profile) => void }) {
           )}
 
           {step === "niche" && (
-            <motion.div key="niche" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, y: -24 }} className="space-y-8">
+            <motion.div key="niche" {...fade} className="space-y-8">
               <MascotRow>{copy.obNiche}</MascotRow>
               <div className="grid gap-3 pl-20 sm:grid-cols-2 sm:pl-28">
                 {niches.map((n, i) => (
@@ -124,7 +127,10 @@ export function Onboarding({ onDone }: { onDone: (p: Profile) => void }) {
                     initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 + i * 0.08 }}
-                    onClick={() => pickNiche(n)}
+                    onClick={() => {
+                      setNiche(n);
+                      setStep("intent");
+                    }}
                     className="surface flex items-center gap-3 rounded-2xl px-5 py-4 text-left transition hover:-translate-y-0.5 hover:border-primary"
                   >
                     <span className="text-2xl">{n.emoji}</span>
@@ -138,16 +144,13 @@ export function Onboarding({ onDone }: { onDone: (p: Profile) => void }) {
                       className="flex items-center gap-2"
                       onSubmit={(e) => {
                         e.preventDefault();
-                        if (custom.trim()) pickNiche(customNiche(custom.trim()));
+                        if (custom.trim()) {
+                          setNiche(customNiche(custom.trim()));
+                          setStep("intent");
+                        }
                       }}
                     >
-                      <input
-                        autoFocus
-                        value={custom}
-                        onChange={(e) => setCustom(e.target.value)}
-                        placeholder={copy.obNicheCustomPlaceholder}
-                        className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-                      />
+                      <input autoFocus value={custom} onChange={(e) => setCustom(e.target.value)} placeholder={copy.obNicheCustomPlaceholder} className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground" />
                       <button type="submit" disabled={!custom.trim()} className="grid size-8 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground transition hover:scale-105 disabled:opacity-40" aria-label={copy.obContinue}>
                         <ArrowRight className="size-4" />
                       </button>
@@ -165,7 +168,7 @@ export function Onboarding({ onDone }: { onDone: (p: Profile) => void }) {
           )}
 
           {step === "intent" && niche && (
-            <motion.div key="intent" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, y: -24 }} className="space-y-8">
+            <motion.div key="intent" {...fade} className="space-y-8">
               <MascotRow>{copy.obIntent}</MascotRow>
               <div className="grid gap-3 pl-20 sm:grid-cols-2 sm:pl-28">
                 {(
@@ -181,7 +184,7 @@ export function Onboarding({ onDone }: { onDone: (p: Profile) => void }) {
                     transition={{ delay: 0.2 + i * 0.1 }}
                     onClick={() => {
                       setIntent(o.v);
-                      setStep("study");
+                      setStep("detail");
                     }}
                     className="surface group rounded-3xl p-5 text-left transition hover:-translate-y-1 hover:border-primary"
                   >
@@ -197,69 +200,80 @@ export function Onboarding({ onDone }: { onDone: (p: Profile) => void }) {
             </motion.div>
           )}
 
-          {step === "study" && niche && intent && (
-            <motion.div key="study" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, y: -24 }} className="space-y-8">
-              <MascotRow>
-                {analyzing ? (
-                  <span className="inline-flex items-center gap-2">
-                    {copy.obStudy}
-                    <span className="flex gap-1">
-                      {[0, 1, 2].map((i) => (
-                        <motion.span key={i} className="size-1.5 rounded-full bg-primary" animate={{ opacity: [0.2, 1, 0.2] }} transition={{ repeat: Infinity, duration: 1, delay: i * 0.2 }} />
-                      ))}
-                    </span>
-                  </span>
-                ) : (
-                  copy.obStudyDone
-                )}
-              </MascotRow>
-
-              <AnimatePresence>
-                {!analyzing && (
-                  <motion.div initial={{ opacity: 0, y: 24, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ type: "spring", stiffness: 160, damping: 18 }} className="surface ml-20 space-y-4 rounded-3xl p-5 sm:ml-28">
-                    <div className="flex items-center gap-3">
-                      <span className="text-3xl">{niche.emoji}</span>
-                      <div>
-                        <div className="font-semibold">{niche.name}</div>
-                        <div className="inline-flex items-center gap-1 text-xs font-medium text-success">
-                          <TrendingUp className="size-3" /> +{niche.study.trend}% ce mois
-                        </div>
-                      </div>
-                      <div className="ml-auto text-right">
-                        <div className="text-3xl font-semibold text-primary">{niche.study.demandScore}</div>
-                        <div className="text-[10px] text-muted-foreground">{copy.demandScore} /100</div>
-                      </div>
-                    </div>
-
-                    <p className="text-sm text-muted-foreground">{niche.study.note}</p>
-
-                    <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-muted-foreground">
-                      <span>
-                        {copy.median} : <b className="text-foreground">{eur(niche.study.median)}</b>
-                      </span>
-                      <span className="inline-flex items-center gap-1.5">
-                        {copy.obBestPlatform} :
-                        <b className="inline-flex items-center gap-1.5 text-foreground">
-                          <span className="size-2.5 rounded-full" style={{ background: marketplaces[niche.study.bestPlatform]?.color }} />
-                          {marketplaces[niche.study.bestPlatform]?.name}
-                        </b>
-                      </span>
-                    </div>
-
-                    <p className="rounded-2xl bg-secondary px-4 py-2.5 text-sm text-secondary-foreground">
-                      {intent === "sell" ? copy.obStudySell : copy.obStudyBuy}
-                    </p>
-
-                    <button onClick={() => onDone({ hasAccount, niche, intent })} className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary py-2.5 text-sm font-semibold text-primary-foreground shadow-md transition hover:brightness-110">
-                      {copy.obStart} <Check className="size-4" />
+          {step === "detail" && niche && intent === "sell" && (
+            <motion.div key="sell" {...fade} className="space-y-8">
+              <MascotRow>{copy.obSellPhotos}</MascotRow>
+              <div className="surface ml-20 space-y-4 rounded-3xl p-5 sm:ml-28">
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  hidden
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files ?? []).slice(0, 4 - photos.length);
+                    setPhotos((p) => [...p, ...files.map((f) => URL.createObjectURL(f))]);
+                    e.target.value = "";
+                  }}
+                />
+                <div className="grid grid-cols-4 gap-2">
+                  {photos.map((src, i) => (
+                    <motion.div key={src} initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="relative aspect-square">
+                      <img src={src} alt="" className="size-full rounded-2xl object-cover" />
+                      <button onClick={() => setPhotos((p) => p.filter((_, j) => j !== i))} className="absolute -right-1 -top-1 rounded-full bg-foreground p-1 text-background" aria-label="Retirer">
+                        <X className="size-3" />
+                      </button>
+                    </motion.div>
+                  ))}
+                  {photos.length < 4 && (
+                    <button onClick={() => fileRef.current?.click()} className="grid aspect-square place-items-center rounded-2xl border-2 border-dashed border-border text-muted-foreground transition hover:border-primary hover:text-primary" aria-label={copy.upload}>
+                      <ImagePlus className="size-6" />
                     </button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">{copy.obSellPhotosHint}</p>
+                <input value={item} onChange={(e) => setItem(e.target.value)} placeholder={copy.obSellName} className="w-full rounded-full border border-border bg-background/40 px-4 py-2.5 text-sm outline-none placeholder:text-muted-foreground focus:border-primary" />
+                <button onClick={finish} disabled={photos.length === 0} className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary py-2.5 text-sm font-semibold text-primary-foreground shadow-md transition hover:brightness-110 disabled:opacity-40">
+                  {copy.obContinue} <ArrowRight className="size-4" />
+                </button>
+              </div>
+            </motion.div>
+          )}
+
+          {step === "detail" && niche && intent === "buy" && (
+            <motion.div key="buy" {...fade} className="space-y-8">
+              <MascotRow>{copy.obBuyWhat}</MascotRow>
+              <div className="ml-20 space-y-3 sm:ml-28">
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (item.trim()) finish();
+                  }}
+                  className="surface flex items-center gap-2 rounded-full p-1.5 pl-5"
+                >
+                  <input autoFocus value={item} onChange={(e) => setItem(e.target.value)} placeholder={copy.obBuyPlaceholder} className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground" />
+                  <button type="submit" disabled={!item.trim()} className="grid size-9 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground transition hover:scale-105 disabled:opacity-40" aria-label={copy.obContinue}>
+                    <ArrowRight className="size-4" />
+                  </button>
+                </form>
+                <div className="flex flex-wrap gap-2">
+                  {(suggestions[niche.id] ?? []).map((s) => (
+                    <button key={s} onClick={() => setItem(s)} className="rounded-full bg-card px-3 py-1 text-xs font-medium text-muted-foreground shadow-sm transition hover:text-primary">
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {step === "ready" && (
+            <motion.div key="ready" {...fade}>
+              <MascotRow>{copy.obReady}</MascotRow>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
-    </div>
+    </motion.div>
   );
 }
