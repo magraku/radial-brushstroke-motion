@@ -148,7 +148,8 @@
 @keyframes mascotblink { 0%, 91%, 100% { transform: scaleY(1) } 94% { transform: scaleY(0.12) } }
 
 .cube-background { position: absolute; inset: 0; overflow: hidden; pointer-events: none; background: var(--background); }
-.cube-background img { width: 100%; height: 100%; object-fit: cover; opacity: .24; }
+.cube-background img { width: 100%; height: 100%; object-fit: cover; }
+.mascot-shadow { filter: drop-shadow(0 1px 1px var(--tree-leaf)) drop-shadow(0 0 3px color-mix(in oklab, var(--tree-leaf) 45%, transparent)); }
 .mascot-metal { fill: url(#mascot-metal-fill); stroke: var(--mascot-outline); stroke-width: .45; filter: drop-shadow(0 2px 1px var(--tree-leaf)); }
 @media (prefers-reduced-motion: reduce) {
   .mascot-eye, .mascot-float { animation: none; }

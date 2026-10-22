@@ -181,6 +181,47 @@ function Instanced({ geometry, material, matrices, colors, visible }: { geometry
   return <instancedMesh ref={ref} args={[geometry, material, matrices.length]} frustumCulled={false} />;
 }
 
+// Melancholic yellowed grass that half-covers the roots so the tree sits on the ground.
+function Grass() {
+  const data = useMemo(() => {
+    const r = rng(31);
+    const blade = new THREE.PlaneGeometry(0.05, 1, 1, 4);
+    const pos = blade.attributes["position"] as THREE.BufferAttribute;
+    for (let i = 0; i < pos.count; i++) {
+      const y = pos.getY(i) + 0.5;
+      pos.setXYZ(i, pos.getX(i) * (1 - y * 0.92), y, y * y * 0.18);
+    }
+    blade.computeVertexNormals();
+    const shades = ["#c9b06a", "#b49a52", "#d8c487", "#9c8a4c", "#a8925f"].map((c) => new THREE.Color(c));
+    const m: THREE.Matrix4[] = [], c: THREE.Color[] = [];
+    for (let i = 0; i < 2600; i++) {
+      const rad = Math.pow(r(), 0.6) * 4.2, a = r() * Math.PI * 2;
+      const h = (0.3 + r() * 0.5) * (1.15 - rad / 6);
+      const q = new THREE.Quaternion().setFromEuler(new THREE.Euler((r() - 0.5) * 0.5, r() * Math.PI * 2, (r() - 0.5) * 0.5));
+      m.push(new THREE.Matrix4().compose(new THREE.Vector3(Math.cos(a) * rad, -0.08, Math.sin(a) * rad), q, new THREE.Vector3(1, h, 1)));
+      c.push((shades[i % shades.length] ?? new THREE.Color("#c9b06a")).clone().multiplyScalar(0.85 + r() * 0.3));
+    }
+    return { blade, m, c, mat: new THREE.MeshStandardMaterial({ roughness: 0.85, side: THREE.DoubleSide }), ground: new THREE.CircleGeometry(4.6, 48) };
+  }, []);
+  const ref = useRef<THREE.InstancedMesh>(null);
+  useLayoutEffect(() => {
+    const mesh = ref.current;
+    if (!mesh) return;
+    data.m.forEach((mm, i) => { mesh.setMatrixAt(i, mm); mesh.setColorAt(i, data.c[i] ?? new THREE.Color()); });
+    mesh.instanceMatrix.needsUpdate = true;
+    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+  }, [data]);
+  useEffect(() => () => { data.blade.dispose(); data.mat.dispose(); data.ground.dispose(); }, [data]);
+  return (
+    <group>
+      <mesh geometry={data.ground} rotation-x={-Math.PI / 2} position-y={-0.06}>
+        <meshStandardMaterial color="#8f7d47" roughness={1} transparent opacity={0.9} />
+      </mesh>
+      <instancedMesh ref={ref} args={[data.blade, data.mat, data.m.length]} frustumCulled={false} />
+    </group>
+  );
+}
+
 export function TreeScene({ bloom = "none" }: { bloom?: Bloom }) {
   const data = useMemo(() => {
     const { bark, tips } = buildTree();
@@ -242,7 +283,7 @@ export function TreeScene({ bloom = "none" }: { bloom?: Bloom }) {
 
   return (
     <group>
-
+      <Grass />
       <mesh geometry={data.bark}>
         <meshPhysicalMaterial color={data.colors.silver} metalness={0.8} roughness={0.26} clearcoat={0.6} clearcoatRoughness={0.25} />
       </mesh>

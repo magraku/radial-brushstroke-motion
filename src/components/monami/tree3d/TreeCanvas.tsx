@@ -14,7 +14,7 @@ export type TreeStage = "roots" | "trunk" | "branch" | "canopy" | "fruit" | "ful
 export type { Bloom };
 
 const STAGES: Record<TreeStage, { pos: [number, number, number]; look: [number, number, number] }> = {
-  roots: { pos: [0, 1.0, 5.4], look: [0, 1.2, 0] },
+  roots: { pos: [0, 1.3, 6.2], look: [0, 0.5, 0] },
   trunk: { pos: [0.8, 4.0, 6.4], look: [0, 4.2, 0] },
   branch: { pos: [-3.2, 7.0, 7.0], look: [-1.2, 7.4, 0] },
   canopy: { pos: [0.6, 9.5, 16], look: [0, 9.0, 0] },
