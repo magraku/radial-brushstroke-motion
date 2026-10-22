@@ -180,8 +180,8 @@ export const niches: Niche[] = [
       sellThroughDays: 4,
       median: 35,
       trend: 14,
-      bestPlatform: "cardmarket",
-      note: "Les holos et les displays scellés partent en quelques jours, surtout sur Cardmarket.",
+      bestPlatform: "ebay",
+      note: "Les holos et les displays scellés partent en quelques jours, surtout sur eBay et Cardmarket.",
     },
   },
   {
