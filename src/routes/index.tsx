@@ -56,9 +56,7 @@ function Index() {
     setMessages((m) => [...m, { id: idRef.current++, role: "user", text, photo }]);
     const t = text.toLowerCase();
     if (photo || /vendre|ajouter|add|sell/.test(t)) {
-      if (!photo && /^ajouter un produit$/.test(t)) {
-        reply(agentReplies.analysis, () => setView("analysis"));
-      } else reply(agentReplies.analysis, () => setView("analysis"));
+      reply(agentReplies.analysis, () => setView("analysis"));
     } else if (/best|meilleur|vend le plus/.test(t)) {
       reply(agentReplies.bestSeller, () => setView("inventory"));
     } else if (/plan|deal|affaire|arnaque/.test(t)) {
