@@ -40,51 +40,54 @@ function tube(points: THREE.Vector3[], r0: number, r1: number, tubular: number, 
   return geo;
 }
 
+type Spec = { points: [number, number, number][]; r0: number; r1: number; root?: boolean };
+
+// Hand-tuned winding skeleton (the original tree), echoing the design reference.
+const BRANCHES: Spec[] = [
+  { points: [[0, -0.3, 0], [-0.35, 1.6, 0.15], [0.4, 3.2, -0.1], [-0.15, 4.8, 0.2], [0.3, 6.4, 0], [0, 8, 0.1], [0.15, 9.4, 0]], r0: 0.6, r1: 0.16 },
+  { points: [[0.05, 5.6, 0.05], [-1.4, 6.3, 0.3], [-2.9, 6.9, 0.1], [-4.2, 7.9, -0.2], [-5.1, 9.2, 0]], r0: 0.26, r1: 0.05 },
+  { points: [[-2.9, 6.9, 0.1], [-3.6, 7.6, 0.7], [-4.0, 8.6, 0.9]], r0: 0.13, r1: 0.04 },
+  { points: [[0.2, 7.2, 0], [1.7, 7.9, -0.2], [3.2, 8.5, 0.1], [4.4, 9.6, 0.3], [5.2, 10.9, 0.1]], r0: 0.24, r1: 0.05 },
+  { points: [[3.2, 8.5, 0.1], [3.9, 9.2, -0.6], [4.3, 10.3, -0.8]], r0: 0.12, r1: 0.04 },
+  { points: [[0.15, 9.4, 0], [-0.7, 10.4, 0.2], [-1.5, 11.1, 0.1]], r0: 0.11, r1: 0.03 },
+  { points: [[0.15, 9.4, 0], [1.0, 10.5, -0.1], [1.9, 11.3, 0.1]], r0: 0.11, r1: 0.03 },
+  { points: [[0.15, 9.4, 0], [0.1, 10.7, 0.3], [0.0, 11.9, 0.2]], r0: 0.1, r1: 0.03 },
+  { points: [[0, 0.25, 0], [-0.9, -0.05, 0.3], [-2.1, -0.25, 0.5]], r0: 0.32, r1: 0.05, root: true },
+  { points: [[0, 0.25, 0], [1.0, -0.05, -0.2], [2.3, -0.25, -0.4]], r0: 0.3, r1: 0.05, root: true },
+  { points: [[0, 0.25, 0], [0.2, -0.15, 0.9], [0.4, -0.3, 1.9]], r0: 0.26, r1: 0.05, root: true },
+  { points: [[0, 0.25, 0], [-0.3, -0.15, -0.8], [-0.7, -0.3, -1.8]], r0: 0.24, r1: 0.05, root: true },
+  { points: [[0, 0.2, 0], [0.8, -0.1, 0.8], [1.6, -0.3, 1.3]], r0: 0.18, r1: 0.04, root: true },
+];
+
 function buildTree() {
   const r = rng(7);
   const geos: THREE.BufferGeometry[] = [];
   const tips: Tip[] = [];
-  const up = new THREE.Vector3(0, 1, 0);
 
-  const grow = (start: THREE.Vector3, dir: THREE.Vector3, len: number, rad: number, depth: number) => {
-    const pts = [start.clone()];
-    const d = dir.clone();
-    let p = start.clone();
-    for (let i = 1; i <= 4; i++) {
-      d.add(new THREE.Vector3((r() - 0.5) * 0.35, 0.08, (r() - 0.5) * 0.35)).normalize();
-      p = p.clone().addScaledVector(d, len / 4);
-      pts.push(p);
-    }
-    const end = rad * 0.55;
-    geos.push(tube(pts, rad, end, depth < 2 ? 48 : 20, depth < 2 ? 24 : 12));
-    if (depth >= 4) {
-      tips.push({ p: p.clone(), d: d.clone() });
-      return;
-    }
-    const n = depth === 0 ? 4 : 3;
+  BRANCHES.forEach((b, bi) => {
+    const pts = b.points.map((p) => new THREE.Vector3(...p));
+    const big = b.r0 > 0.2;
+    geos.push(tube(pts, b.r0, b.r1, big ? 64 : 32, big ? 24 : 14));
+    if (b.root) return;
+    const curve = new THREE.CatmullRomCurve3(pts);
+    const end = curve.getPoint(1);
+    tips.push({ p: end, d: curve.getTangent(1) });
+    if (bi === 0) return;
+    // Pixar detail: little curling twigs sprouting along each branch
+    const n = big ? 4 : 2;
     for (let k = 0; k < n; k++) {
-      const t = depth === 0 ? 0.55 + (k / n) * 0.45 : 0.45 + r() * 0.55;
-      const idx = Math.min(4, Math.round(t * 4));
-      const from = pts[idx]!;
-      const az = (k / n) * Math.PI * 2 + r() * 1.2;
-      const tilt = 0.5 + r() * 0.45;
-      const side = new THREE.Vector3(Math.cos(az), 0, Math.sin(az));
-      const nd = d.clone().multiplyScalar(Math.cos(tilt)).addScaledVector(side, Math.sin(tilt)).lerp(up, 0.15).normalize();
-      grow(from, nd, len * (0.62 + r() * 0.12), end * (0.75 + r() * 0.15), depth + 1);
+      const t = 0.35 + (k / n) * 0.6 + r() * 0.05;
+      const from = curve.getPoint(t);
+      const tan = curve.getTangent(t);
+      const side = new THREE.Vector3((r() - 0.5) * 2, 0.6 + r() * 0.6, (r() - 0.5) * 2).normalize();
+      const d = tan.clone().lerp(side, 0.65).normalize();
+      const len = (big ? 1.3 : 0.8) * (0.7 + r() * 0.5);
+      const p1 = from.clone().addScaledVector(d, len * 0.5);
+      const p2 = p1.clone().addScaledVector(d.clone().add(new THREE.Vector3((r() - 0.5) * 0.6, 0.35, (r() - 0.5) * 0.6)).normalize(), len * 0.5);
+      geos.push(tube([from, p1, p2], b.r0 * 0.38, 0.025, 16, 8));
+      tips.push({ p: p2, d });
     }
-  };
-  grow(new THREE.Vector3(0, -0.3, 0), up, 5.2, 0.62, 0);
-
-  // roots
-  for (let k = 0; k < 5; k++) {
-    const a = (k / 5) * Math.PI * 2 + 0.4;
-    const pts = [
-      new THREE.Vector3(0, 0.4, 0),
-      new THREE.Vector3(Math.cos(a) * 0.9, -0.05, Math.sin(a) * 0.9),
-      new THREE.Vector3(Math.cos(a) * 2.0, -0.28, Math.sin(a) * 2.0),
-    ];
-    geos.push(tube(pts, 0.32, 0.05, 20, 10));
-  }
+  });
 
   // keep per-tube smooth normals (recomputing after merge would facet the seams)
   const bark = mergeGeometries(geos, false)!;
