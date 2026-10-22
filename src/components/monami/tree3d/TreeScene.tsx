@@ -56,7 +56,7 @@ function buildTree() {
       pts.push(p);
     }
     const end = rad * 0.55;
-    geos.push(tube(pts, rad, end, depth < 2 ? 40 : 16, depth < 2 ? 14 : 8));
+    geos.push(tube(pts, rad, end, depth < 2 ? 48 : 20, depth < 2 ? 24 : 12));
     if (depth >= 4) {
       tips.push({ p: p.clone(), d: d.clone() });
       return;
@@ -86,8 +86,8 @@ function buildTree() {
     geos.push(tube(pts, 0.32, 0.05, 20, 10));
   }
 
-  const bark = mergeGeometries(geos.map((g) => g.toNonIndexed()), false)!;
-  bark.computeVertexNormals();
+  // keep per-tube smooth normals (recomputing after merge would facet the seams)
+  const bark = mergeGeometries(geos, false)!;
   return { bark, tips };
 }
 
@@ -186,9 +186,9 @@ export function TreeScene({ bloom = "none" }: { bloom?: Bloom }) {
       leafC,
       fruitM,
       stemM,
-      fruitGeo: new THREE.SphereGeometry(0.2, 24, 18),
-      stemGeo: new THREE.CylinderGeometry(0.012, 0.018, 0.3, 6),
-      leafMat: new THREE.MeshStandardMaterial({ color: "#ffffff", roughness: 0.55, side: THREE.DoubleSide }),
+      fruitGeo: new THREE.SphereGeometry(0.15, 32, 24),
+      stemGeo: new THREE.CylinderGeometry(0.01, 0.015, 0.26, 6),
+      leafMat: new THREE.MeshStandardMaterial({ color: "#ffffff", roughness: 0.5, side: THREE.DoubleSide, emissive: "#3a0010", emissiveIntensity: 0.35 }),
       fruitMat: new THREE.MeshPhysicalMaterial({ color: "#7a0a22", roughness: 0.28, clearcoat: 1, clearcoatRoughness: 0.15, sheen: 0.4 }),
       stemMat: new THREE.MeshStandardMaterial({ color: "#4a0a14", roughness: 0.7 }),
     };

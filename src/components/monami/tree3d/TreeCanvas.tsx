@@ -17,7 +17,7 @@ const STAGES: Record<TreeStage, { pos: [number, number, number]; look: [number, 
   roots: { pos: [0, 1.0, 5.4], look: [0, 1.2, 0] },
   trunk: { pos: [0.8, 4.0, 6.4], look: [0, 4.2, 0] },
   branch: { pos: [-3.2, 7.0, 7.0], look: [-1.2, 7.4, 0] },
-  canopy: { pos: [0.6, 10.0, 11.5], look: [0, 9.6, 0] },
+  canopy: { pos: [0.6, 9.5, 16], look: [0, 9.0, 0] },
   fruit: { pos: [2.6, 9.6, 6.0], look: [1.6, 10.0, 0] },
   full: { pos: [0, 7.5, 22], look: [0, 7.4, 0] },
 };
