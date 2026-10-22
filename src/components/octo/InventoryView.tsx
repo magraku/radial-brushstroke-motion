@@ -27,7 +27,7 @@ export function InventoryView({ items, pulseId }: { items: Product[]; pulseId?: 
           ))}
         </div>
       </div>
-      <div className="flex flex-1 items-center justify-center pb-6 pt-8">
+      <div className="flex flex-1 items-end justify-center pb-6 pt-10">
         <div className="grid grid-cols-2 gap-x-10 gap-y-14 sm:grid-cols-3 lg:grid-cols-5 lg:gap-x-16">
           <AnimatePresence mode="popLayout">
             {boxes.map((b, i) => (
